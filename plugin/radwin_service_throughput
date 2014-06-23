@@ -1,0 +1,22 @@
+#!/usr/bin/python
+
+def check_radwin_service_throughput(item, _no_params, info):
+	service_throughput  = int(info[0][0])
+	if service_throughput == 0 or service_throughput < -1:
+		state = 2
+		infotext = "Device service throughput is Zero" 
+	else:
+		state = 0
+		infotext = "Device service_throughput is %d " % service_throughput
+	return (state,  infotext,[("Service_throughput",service_throughput)])
+
+check_info["radwin_service_throughput"] = {
+	'check_function'        :  check_radwin_service_throughput,
+	'service_description'   :  'radwin_service_throughput',
+	'has_perfdata'		:  True,
+	
+}
+
+snmp_info["radwin_service_throughput"] = ( ".1.3.6.1.4.1.4458.1000.2.2", [ "14.0" ] )
+#snmp_info["radwin_service_throughput"] = ( ".1.3.6.1.4.1.4458.1000.1", [ "5.8" ] )
+

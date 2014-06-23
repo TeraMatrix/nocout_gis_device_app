@@ -1,0 +1,25 @@
+#!/usr/bin/python
+
+def check_radwin_link_distance_invent(item, _no_params, info):
+	try:
+		link_distance  = int(info[0][0])
+		if link_distance  == -1:
+			infotex = "Device Link is not established "
+			state = 0
+		elif link_distance > 0:
+			state = 0
+        		infotext = "%d" % link_distance
+	except:
+		state = 3
+		infotext = "Unknown value"
+	return (state,  infotext)
+
+check_info["radwin_link_distance_invent"] = {
+    'check_function'        :  check_radwin_link_distance_invent,
+    'service_description'   :  'radwin_link_distance_invent',
+}
+
+snmp_info["radwin_link_distance_invent"] = ( ".1.3.6.1.4.1.4458.1000.1", [ "5.29" ] )
+#snmp_info["radwin_link_distance_invent"] = ( ".1.3.6.1.4.1.4458.1000.1", [ "5.8" ] )
+
+

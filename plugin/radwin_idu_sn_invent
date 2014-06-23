@@ -1,0 +1,21 @@
+#!/usr/bin/python
+
+def check_radwin_idu_sn_invent(item, _no_params, info):
+	try:
+		idu_sn  = info[0][0]
+		state = 0
+		infotext = "%s" % idu_sn
+	except:
+		state = 3
+		infotext = "Unknown value" 
+	return (state,  infotext)
+
+check_info["radwin_idu_sn_invent"] = {
+    'check_function'        :  check_radwin_idu_sn_invent,
+    'service_description'   :  'radwin_idu_sn_invent',
+}
+
+snmp_info["radwin_idu_sn_invent"] = ( ".1.3.6.1.4.1.4458.1000.2", [ "1.6" ] )
+#snmp_info["radwin_mimo_diversity"] = ( ".1.3.6.1.4.1.4458.1000.1", [ "5.8" ] )
+
+
