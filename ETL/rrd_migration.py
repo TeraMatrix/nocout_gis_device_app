@@ -8,13 +8,13 @@ from xml.etree import ElementTree as ET
 import subprocess
 import pymongo
 import rrd_main
+import mongo_functions
 
-
-def build_export(site,host,service):
+def build_export(site,host):
 	_folder = '/opt/omd/sites/%s/var/pnp4nagios/perfdata/%s/' % (site,host)
 	xml_file_list = []
-	tmp_service =service
-	service = service.replace(' ','_')
+	#tmp_service =service
+	#service = service.replace(' ','_')
 	params = []
 	perf_data =None
 	m = 0
@@ -23,12 +23,12 @@ def build_export(site,host,service):
 	temp_dict = {}
 	data_dict = {
 		"host": host,
-		"service": service,
+		"service": None,
 		"ds": {}
 
 	}
 	threshold_values = {}
-	
+	db = mongo_functions.mongo_db_conn(site,"nocout")	
 	for perf_file in os.listdir(_folder):
 		if perf_file.endswith(".xml"):
 			xml_file_list.append(perf_file)		
@@ -40,6 +40,8 @@ def build_export(site,host,service):
 			raise IOError ,e
 
 		perf_data = root.find("NAGIOS_PERFDATA").text.strip()
+		serv_disc = root.find("NAGIOS_SERVICEDESC").text.strip()
+		data_dict['service'] = serv_disc
 		threshold_values = get_threshold(perf_data)
 		for ds in root.findall('DATASOURCE'):
 			params.append(ds.find('NAME').text)
@@ -64,13 +66,18 @@ def build_export(site,host,service):
 						)
 						data_dict.get('ds').get(ds_index).get('data').append(temp_dict)
 			data_dict.get('ds').get(ds_index)['meta'] = threshold_values.get(ds_index)
-		status = insert_data(data_dict)
+		if xml_file == '_HOST_.xml':
+			mongo_functions.mongo_db_insert(db,data_dict,"network_perf_data")
+		else:
+			mongo_functions.mongo_db_insert(db,data_dict,"serv_perf_data")
+
+		#status = insert_data(data_dict)
 
 		params = []
 		file_paths = []
 		data_dict = {
 				"host": host,
-				"service": service,
+				"service": None,
 				"ds": {}
 		}
 
@@ -216,9 +223,8 @@ def insert_data(data_dict):
 
 
 def rrd_migration_main(site,host,services):
-	for service in services[0]:
-		build_export(site,host,service)
-        
+	build_export(site,host)
+        #for service in services[0]:
 
 """if __name__ == '__main__':
     build_export('BT','AM-400','PING')
