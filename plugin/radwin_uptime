@@ -1,0 +1,25 @@
+#!/usr/bin/python
+
+def check_radwin_uptime(item, _no_params, info):
+	uptime  = int(info[0][0])
+        uptime = uptime/100
+        seconds = uptime % 60
+        rem = uptime / 60
+        minutes = rem % 60
+        hours = (rem % 1440) / 60
+        days = rem / 1440
+        now = int(time.time())
+        since = time.strftime("%c", time.localtime(now - uptime))
+        state = 0
+        infotext = "up since %s (%dd %02d:%02d:%02d)" % (since, days, hours, minutes, seconds)
+	return (state,  infotext,[("uptime",uptime)])
+
+check_info["radwin_uptime"] = {
+	'check_function'        :  check_radwin_uptime,
+	'service_description'   :  'Radwin_uptime',
+	'has_perfdata'		:  True
+
+}
+
+snmp_info["radwin_uptime"] = ( ".1.3.6.1.2.1.1", [ "3.0" ] )
+

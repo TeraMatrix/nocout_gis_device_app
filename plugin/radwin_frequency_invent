@@ -1,0 +1,23 @@
+#!/usr/bin/python
+
+def check_radwin_frequency_invent(item, _no_params, info):
+        try:
+        	frequency  = int(info[0][0])
+		if frequency == None or frequency  < 0 :
+			state = 0
+			infotext = "illegal value of frequency"
+		else:
+        		state = 0
+        		infotext = "%d " % frequency
+        except:
+		state = 3
+		infotext = "Unknown value"
+        return (state,  infotext)
+
+check_info["radwin_frequency_invent"] = {
+    'check_function'        :  check_radwin_frequency_invent,
+    'service_description'   :  'radwin_frequency_invent',
+}
+
+snmp_info["radwin_frequency_invent"] = ( ".1.3.6.1.4.1.4458.1000.1", [ "5.16" ] )
+#snmp_info["radwin_frequency_invent"] = ( ".1.3.6.1.4.1.4458.1000.1", [ "5.8" ] )

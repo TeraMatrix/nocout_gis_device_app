@@ -1,0 +1,20 @@
+#!/usr/bin/python
+
+def check_radwin_cbw_invent(item, _no_params, info):	
+	try:
+		cbw  = int(info[0][0])
+		state = 0
+		cbw = cbw/1000
+		infotext = "%d MHZ" % cbw
+	except:
+		state = 3
+		infotext = "Unkown value or snmp time out"
+	return (state,  infotext)
+
+check_info["radwin_cbw_invent"] = {
+    'check_function'        :  check_radwin_cbw_invent,
+    'service_description'   :  'radwin_cbw_invent',
+}
+
+snmp_info["radwin_cbw_invent"] = ( ".1.3.6.1.4.1.4458.1000.1", [ "5.24" ] )
+#snmp_info["radwin_cbw"] = ( ".1.3.6.1.4.1.4458.1000.1", [ "5.8" ] )
