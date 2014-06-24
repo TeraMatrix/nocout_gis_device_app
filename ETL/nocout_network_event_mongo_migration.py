@@ -25,8 +25,6 @@ def read_data(site_name, start_time, end_time):
     db = None
     port = None
     docs = []
-    print start_time 
-    print end_time
     db=mongo_functions.mongo_db_conn(site_name,"nocout_event_log")
     if db:
         cur = db.nocout_host_event_log.find({
@@ -34,7 +32,6 @@ def read_data(site_name, start_time, end_time):
         })
         for doc in cur:
             docs.append(doc)
-	    print doc 
     return docs
 
 def build_data(doc):
