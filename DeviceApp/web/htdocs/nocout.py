@@ -12,6 +12,26 @@ import os
 hosts_file = root_dir + "hosts.mk"
 rules_file = root_dir + "rules.mk"
 
+nocout_replication_paths = [
+    ( "dir",  "check_mk",   root_dir ),
+    ( "dir",  "multisite",  multisite_dir ),
+    ( "file", "htpasswd",   defaults.htpasswd_file ),
+    ( "file", "auth.secret",  '%s/auth.secret' % os.path.dirname(defaults.htpasswd_file) ),
+    ( "file", "auth.serials", '%s/auth.serials' % os.path.dirname(defaults.htpasswd_file) ),
+    ( "dir", "usersettings", defaults.var_dir + "/web" ),
+]
+nocout_backup_paths = nocout_replication_paths + [
+    ( "file", "sites",      sites_mk)
+]
+
+host_tags = {
+    "snmp": "snmp-only|snmp",
+    "cmk_agent": "cmk-agent|tcp",
+    "snmp_v1": "snmp-v1|snmp",
+    "dual": "snmp-tcp|snmp|tcp",
+    "ping": "ping"
+}
+
 g_host_vars = {
     "FOLDER_PATH": "",
     "ALL_HOSTS": ALL_HOSTS, # [ '@all' ]
@@ -25,6 +45,17 @@ g_host_vars = {
     "_lock": False,
 }
 
+g_service_vars = {
+    "only_hosts": None,
+    "ALL_HOSTS": [],
+    "host_contactgroups": [],
+    "bulkwalk_hosts": [],
+    "extra_host_conf": {},
+    "extra_service_conf": {},
+    "static_checks": {},
+    "ping_levels": []
+}
+
 
 def main():
     action = html.var('mode')
@@ -35,7 +66,10 @@ def main():
         # Calling the appropriate function based on action
         response = globals()[action]()
     except KeyError, e:
-        html.write("No function implemented for this mode")
+        response = {
+            "success": 0,
+            "message": "No action defined for mode " + action
+        }
 
     html.write(pprint.pformat(response))
 
@@ -49,7 +83,6 @@ def addhost():
         "error_code": None,
         "error_message": None
     }
-    payload = {}
     payload = {
         "host": html.var("device_name"),
         "attr_alias": html.var("device_alias"),
@@ -105,7 +138,27 @@ def addhost():
 
 
 def addservice():
-    pass
+    response = {
+        "success": 1,
+        "device_name": html.var('device_name'),
+        "service_name": html.var('service_name'),
+        "message": "Service added for host ",
+        "error_code": None,
+        "error_message": None
+    }
+    payload = {
+        "host": html.var("device_name"),
+        "service": html.var("service_name"),
+        "serv_params": html.var('serv_params'),
+        "cmd_params": html.var('cmd_params'),
+        "agent_tag": html.var('agent_tag')
+    }
+    new_host = nocout_find_host(payload.get('host'))
+    if new_host:
+        give_permissions(rules_file)
+        host_tags = host_tags.get(payload.get('agent_tag'))
+        service_tuple = ((payload.get('service_name', None, payload.get('cmd_params'))), [host_tags], [payload.get('host')])
+        save_service(payload.get('service'), service_tuple)
 
 
 def edithost():
@@ -152,6 +205,88 @@ def edithost():
 
     return response
 
+
+def sync():
+    sites_affected = []
+    response = {
+        "success": 1,
+        "message": "Config pushed to "
+    }
+    # Snapshot for the local-site; to be used only by master site
+    #nocout_create_snapshot()
+
+    nocout_create_sync_snapshot()
+    nocout_sites = nocout_distributed_sites()
+    if len(nocout_sites) == 1:
+        response.update({
+            "success": 0,
+            "message": "No slave multisites present"
+        })
+        return response
+
+    for site, attrs in nocout_sites.items():
+        if attrs.get("replication") == "slave":
+            response_text = nocout_synchronize_site(site, attrs, True)
+            if response_text is True:
+                sites_affected.append(site)
+    response.update({
+        "message": "Config pushed to " + ','.join(sites_affected)
+    })
+
+    return response
+
+
+def nocout_synchronize_site(site, site_attrs, restart):
+    response = nocout_push_snapshot_to_site(site, site_attrs, True)
+
+    return response
+
+
+def nocout_distributed_sites():
+    nocout_site_vars = {
+        "sites": {}
+    }
+    execfile(sites_mk, nocout_site_vars, nocout_site_vars)
+
+    return nocout_site_vars.get("sites")
+
+
+def nocout_push_snapshot_to_site(site, site_attrs, restart):
+    mode = "slave"
+    url_base = site_attrs.get('multisiteurl') + "automation.py?"
+    var_string = htmllib.urlencode_vars([
+        ("command", "push-snapshot"),
+        ("siteid", site),
+        ("mode", mode),
+        ("restart", "yes"),
+        ("debug", "1"),
+        ("secret", site_attrs.get('secret'))
+    ])
+    url = url_base + var_string
+    response_text = upload_file(url, sync_snapshot_file, '')
+    try:
+        response = eval(response_text)
+        return response
+    except:
+        return "Garbled response from automation"
+
+
+def nocout_create_sync_snapshot():
+    global nocout_replication_paths
+    if os.path.exists(sync_snapshot_file):
+        #os.remove(sync_snapshot_file)
+        tmp_path = "%s-%s" % (sync_snapshot_file, 'nocout')
+        multitar.create(tmp_path, nocout_replication_paths)
+        os.rename(tmp_path, sync_snapshot_file)
+
+
+def nocout_create_snapshot():
+    global nocout_backup_paths
+    snapshot_name = "wato-snapshot-%s.tar.gz" %  \
+                    time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime(time.time()))
+    multitar.create(snapshot_dir + snapshot_name, nocout_backup_paths)
+
+    return "Snapshot created " + snapshot_name
     
 
 def load_file(file_path):
@@ -213,14 +348,19 @@ def save_host(file_path):
     return True
 
 
+def save_service(service_name, service_tuple):
+    try:
+        f = os.open(rules_file, os.O_RDWR)
+    except OSError, e:
+        raise OSError, e
+        return False
+    fcntl.flock(f, fcntl.LOCK_EX)
+    #TODO:: Save the check_info here
+    os.close(f)
+    
+
 def nocout_add_host_attributes(host_attrs):
-    host_tags = {
-        "snmp": "snmp-only|snmp",
-        "cmk_agent": "cmk-agent|tcp",
-        "snmp_v1": "snmp-v1|snmp",
-        "dual": "snmp-tcp|snmp|tcp",
-        "ping": "ping"
-    }
+    global host_tags
     host_entry = "%s|lan|prod|%s|site:%s|wato|//" % (
     host_attrs.get('host'), host_tags.get(html.var('agent_tag')), host_attrs.get('site'))
     g_host_vars['all_hosts'].append(host_entry)
