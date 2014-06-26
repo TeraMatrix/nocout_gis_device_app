@@ -6,23 +6,19 @@ from rrd_migration import mongo_conn, db_port
 import subprocess
 
 
-def main():
+def main(**configs):
     data_values = []
     values_list = []
     docs = []
     end_time = datetime.now()
     start_time = end_time - timedelta(minutes=5)
     #Do os.walk on this dir
-    site_dirs = os.listdir('/opt/omd/sites/')
+    #site_dirs = os.listdir('/opt/omd/sites/')
 
-    docs = read_data('site1', start_time, end_time)
-    #print "-- docs --"
-    #print docs
+    docs = read_data(start_time, end_time, configs=configs)
     for doc in docs:
         values_list = build_data(doc)
         data_values.extend(values_list)
-    #print "-- data_values --"
-    #print data_values
     field_names = [
         'device_name',
         'service_name',
@@ -38,29 +34,24 @@ def main():
         'sys_timestamp',
         'check_timestamp'
     ]
-    insert_data('performance_performancemetric', field_names, data_values)
+    insert_data('performance_performancemetric', data_values, configs=configs)
     print "Data inserted into mysql db"
     
 
-def read_data(site_name, start_time, end_time):
+def read_data(start_time, end_time, **kwargs):
     db = None
     port = None
     docs = []
-    end_time = datetime(2014, 6, 14, 14, 20)
+    end_time = datetime.now()
     start_time = end_time - timedelta(minutes=10)
-    #start_time = datetime(2014, 6, 5, 13, 20)
-    #end_time = datetime(2014, 6, 5, 13, 30)
-    print "-- start_time, end_time --"
-    print start_time, end_time
-    port = db_port(site_name=site_name)
-    if port:
-        db = mongo_conn(
-            host='localhost',
-            port=int(port),
-            db_name='nocout'
-        )
+    
+    db = mongo_conn(
+        host=kwargs.get('configs').get('host'),
+        port=int(kwargs.get('configs').get('port')),
+        db_name=kwargs.get('configs').get('nosql_db')
+    )
     if db:
-        cur = db.device_perf.find({
+        cur = db.network_perf.find({
             "local_timestamp": {"$gt": start_time, "$lt": end_time}
         })
         for doc in cur:
@@ -96,8 +87,8 @@ def build_data(doc):
 
     return values_list
 
-def insert_data(table, field_names, data_values):
-    db = mysql_conn()
+def insert_data(table, data_values, **kwargs):
+    db = mysql_conn(configs=kwargs.get('configs'))
     query = "INSERT INTO `%s` " % table
     query += """
             (device_name, service_name, machine_id, 
@@ -122,9 +113,10 @@ def get_epoch_time(datetime_obj):
     else:
         return datetime_obj
 
-def mysql_conn(db=None):
+def mysql_conn(db=None, **kwargs):
     try:
-        db = MySQLdb.connect(host='localhost', user='root', passwd='root', db='nocout_dev')
+        db = MySQLdb.connect(host=kwargs.get('configs').get('host'), user=kwargs.get('configs').get('user'),
+            passwd=kwargs.get('configs').get('sql_passwd'), db=kwargs.get('configs').get('sql_db'))
     except MySQLdb.Error, e:
         raise MySQLdb.Error, e
 

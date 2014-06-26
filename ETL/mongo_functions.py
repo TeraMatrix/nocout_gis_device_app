@@ -1,22 +1,53 @@
-import MySQLdb
+import pymongo
+import rrd_migration
+def mongo_conn(**kwargs):
+	"""
+    	Mongodb connection object
+    	"""
+    	DB = None
+    	try:
+        	CONN = pymongo.Connection(
+            	host=kwargs.get('host'),
+            	port=kwargs.get('port')
+        	)
+        	DB = CONN[kwargs.get('db_name')]
+    	except pymongo.errors.PyMongoError, e:
+       		raise pymongo.errors.PyMongoError, e
+	return DB
 
-def mysql_execute(query,event_db):
-	out = None
-	conn = MySQLdb.connect(host= "localhost",
-                  user="root",
-                  passwd="lnmiit",
-                  db=event_db)
-	x = conn.cursor()
 
-	try:
-   		x.execute(query)
-   		conn.commit()
+def mongo_db_conn(site_name,db_name):
+	db =None
+        port = rrd_migration.db_port(site_name)
 
-	except MySQLdb.Error, e:
-		print "Error %d: %s" %(e.args[0],e.args[1])
-   		conn.rollback()
+        #Get the mongodb connection object
+        db = mongo_conn(
+                host='localhost',
+                port=int(port),
+                db_name=db_name
+         )
+        return db
 
-	finally:
-		if conn:
-			conn.close()
-	return x
+def mongo_db_insert(db,event_dict,flag):
+        success = 0
+        failure = 1
+        if db:
+                if flag == "serv_event":
+                        db.nocout_service_event_log.insert(event_dict)
+                elif flag == "host_event":
+                        db.nocout_host_event_log.insert(event_dict)
+                elif flag == "snmp_alarm_event":
+                        db.nocout_snmp_trap_log.insert(event_dict)
+		elif flag == "notification_event":
+			db.nocout_notification_log.insert(event_dict)
+		elif flag == "inventory_services":
+			db.nocout_inventory_service_perf_data.insert(event_dict)
+		elif flag == "serv_perf_data":
+			db.device_perf.insert(event_dict)
+		elif flag == "network_perf_data":
+			db.network_perf.insert(event_dict)
+                return success
+        else:
+                print "Mongo_db insertion failed"
+                return failure
+
