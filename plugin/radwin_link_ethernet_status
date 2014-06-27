@@ -1,8 +1,4 @@
 #!/usr/bin/python
-def inventory_radwin_link_ethernet_status(info):
-        print info
-	return []
-
 
 def if_statename(st):
     names = { '1': 'up',      '2': 'down',
@@ -37,7 +33,6 @@ def check_radwin_link_ethernet_status(item,_no_params,info):
         return (state,  infotext, status_list)
 
 check_info["radwin_link_ethernet_status"] = {
-	'inventory_function'    :  inventory_radwin_link_ethernet_status,
         'check_function'        :  check_radwin_link_ethernet_status,
         'service_description'   :  'radwin_link_ethernet_status',
         'has_perfdata'          :  True,
