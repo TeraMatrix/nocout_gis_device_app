@@ -1,0 +1,38 @@
+#!/usr/bin/python
+
+def portstatus(st):
+	names = { '1': 'Auto',		'10': 'forceHalfDuplex10Mbps',
+		'11': 'forcefullDuplex10Mbps', '15': 'forceHalfDuplex100Mbps',
+		'16': 'forcefullDuplex100Mbps', '6556': 'unknown value' }
+	return names.get(st)
+
+def check_radwin_autonegotiation_status(item,_no_params,info):
+	try:
+		if not info[0]:
+			return (3, "No output from Device")
+		port_status_list = []
+		infotext = ""
+		for index in range(len(info)):
+			port_status  = info[index][0]
+			port_status_string =portstatus(str(port_status))
+			if port_status_string == None:
+				port_status_string = "unknown port auto status"		
+			port_status_list.append((str(index+1),port_status_string))
+
+		for index,status in port_status_list:
+			infotext += "[port %s]%s " % (index,status)
+		state = 0
+	except ValueError:
+		state = 0
+		infotext = "unknown value"
+	return (state,infotext,port_status_list)
+
+check_info["radwin_autonegotiation_status"] = {
+	'inventory_function'	:  inventory_radwin_autonegotiation_status,
+	'check_function'	:  check_radwin_autonegotiation_status,
+	'service_description'	:  'radwin_autonegotiation_status',
+	'has_perfdata'		:  True,
+}
+
+snmp_info["radwin_autonegotiation_status"] = ( ".1.3.6.1.4.1.4458.1000.1.3.2.1", [ "6" ] )
+

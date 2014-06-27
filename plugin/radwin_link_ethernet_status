@@ -1,0 +1,46 @@
+#!/usr/bin/python
+def inventory_radwin_link_ethernet_status(info):
+        print info
+	return []
+
+
+def if_statename(st):
+    names = { '1': 'up',      '2': 'down',
+              '3': 'testing', '4': 'unknown',
+              '5': 'dormant', '6': 'notPresent',
+              '7': 'lowerLayerDown' }
+    return names.get(st)
+
+
+def check_radwin_link_ethernet_status(item,_no_params,info):
+        try:
+		if not info[0]:
+			return (3,"No response from device")
+		status_list = []
+		infotext = ""
+		for index in range(len(info)):
+			link_state  = info[index][1]
+			if_name	= info[index][0]
+			if if_name == None:
+				if_name = "unknown interface name"
+			state = if_statename(link_state)
+			if state == None:
+				state = "unknown interface status"
+			status_list.append((if_name,state))
+		state = 0
+		for name,status in status_list:
+			infotext += "[%s]%s " %(name,status)
+	except ValueError:
+		state = 0
+		infotext = "interface status type mismatch"
+		return (state,infotext,[])	
+        return (state,  infotext, status_list)
+
+check_info["radwin_link_ethernet_status"] = {
+	'inventory_function'    :  inventory_radwin_link_ethernet_status,
+        'check_function'        :  check_radwin_link_ethernet_status,
+        'service_description'   :  'radwin_link_ethernet_status',
+        'has_perfdata'          :  True,
+}
+
+snmp_info["radwin_link_ethernet_status"] = ( ".1.3.6.1.2.1.2.2.1", [ "2","8" ] )
