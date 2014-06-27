@@ -28,7 +28,6 @@ def check_radwin_autonegotiation_status(item,_no_params,info):
 	return (state,infotext,port_status_list)
 
 check_info["radwin_autonegotiation_status"] = {
-	'inventory_function'	:  inventory_radwin_autonegotiation_status,
 	'check_function'	:  check_radwin_autonegotiation_status,
 	'service_description'	:  'radwin_autonegotiation_status',
 	'has_perfdata'		:  True,
