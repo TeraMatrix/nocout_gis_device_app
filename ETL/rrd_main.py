@@ -2,6 +2,7 @@ import rrd_migration
 import socket
 import json
 import os
+from configparser import parse_config_obj
 
 
 class MKGeneralException(Exception):
@@ -39,6 +40,8 @@ def get_from_socket(site_name, query):
 
     
 if __name__ == '__main__':
-    site = 'BT'
+    configs = parse_config_obj()
+    for section, options in configs.items():
+        site = options.get('site')
     get_host_services_name(site_name=site)
     

@@ -12,7 +12,6 @@ def main():
             nosql_db=options.get('network').get('nosql_db'),
             sql_db=options.get('network').get('sql_db'), ip=options.get('ip')
         )
-        break
 
 
 
