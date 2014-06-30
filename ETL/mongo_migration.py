@@ -3,17 +3,22 @@ import MySQLdb
 import pymongo
 from datetime import datetime, timedelta
 from rrd_migration import mongo_conn, db_port
+from mongo_functions import get_latest_entry
 import subprocess
+import socket
 
 
 def main(**configs):
     data_values = []
     values_list = []
     docs = []
+    db = mysql_conn(configs=configs)
+    # Get the time for latest entry in mysql
+    start_time = get_latest_entry(db_type='mysql', db=db, site=configs.get('site'))
+
     end_time = datetime.now()
-    start_time = end_time - timedelta(minutes=5)
-    #Do os.walk on this dir
-    #site_dirs = os.listdir('/opt/omd/sites/')
+    if start_time is None:
+        start_time = end_time - timedelta(minutes=5)
 
     docs = read_data(start_time, end_time, configs=configs)
     for doc in docs:
@@ -22,8 +27,8 @@ def main(**configs):
     field_names = [
         'device_name',
         'service_name',
-        'machine_id',
-        'site_id',
+        'machine_name',
+        'site_name',
         'data_source',
         'current_value',
         'min_value',
@@ -39,11 +44,12 @@ def main(**configs):
     
 
 def read_data(start_time, end_time, **kwargs):
+
     db = None
     port = None
     docs = []
-    end_time = datetime.now()
-    start_time = end_time - timedelta(minutes=10)
+    #end_time = datetime(2014, 6, 26, 18, 30)
+    #start_time = end_time - timedelta(minutes=10)
     
     db = mongo_conn(
         host=kwargs.get('configs').get('host'),
@@ -52,7 +58,7 @@ def read_data(start_time, end_time, **kwargs):
     )
     if db:
         cur = db.network_perf.find({
-            "local_timestamp": {"$gt": start_time, "$lt": end_time}
+            "check_time": {"$gt": start_time, "$lt": end_time}
         })
         for doc in cur:
             docs.append(doc)
@@ -61,7 +67,8 @@ def read_data(start_time, end_time, **kwargs):
 
 def build_data(doc):
     values_list = []
-    uuid = get_machineid()
+    #uuid = get_machineid()
+    machine_name = get_machine_name()
     local_time_epoch = get_epoch_time(doc.get('local_timestamp'))
     for ds in doc.get('ds').iterkeys():
         for entry in doc.get('ds').get(ds).get('data'):
@@ -70,7 +77,7 @@ def build_data(doc):
                 #uuid,
                 doc.get('host'),
                 doc.get('service'),
-                '2',
+                machine_name,
                 doc.get('site'),
                 ds,
                 entry.get('value'),
@@ -91,8 +98,8 @@ def insert_data(table, data_values, **kwargs):
     db = mysql_conn(configs=kwargs.get('configs'))
     query = "INSERT INTO `%s` " % table
     query += """
-            (device_name, service_name, machine_id, 
-            site_id, data_source, current_value, min_value, 
+            (device_name, service_name, machine_name, 
+            site_name, data_source, current_value, min_value, 
             max_value, avg_value, warning_threshold, 
             critical_threshold, sys_timestamp, check_timestamp) 
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
@@ -106,7 +113,8 @@ def insert_data(table, data_values, **kwargs):
     cursor.close()
 
 def get_epoch_time(datetime_obj):
-    utc_time = datetime(1970, 1,1)
+    # Get India times (GMT+5.30)
+    utc_time = datetime(1970, 1,1, 5, 30)
     if isinstance(datetime_obj, datetime):
         epoch_time = int((datetime_obj - utc_time).total_seconds())
         return epoch_time
@@ -136,6 +144,16 @@ def get_machineid():
         uuid = err
 
     return uuid
+
+
+def get_machine_name(machine_name=None):
+    try:
+        machine_name = socket.gethostname()
+    except Exception, e:
+        raise Exception(e)
+
+    return machine_name
+
 
 if __name__ == '__main__':
     main()

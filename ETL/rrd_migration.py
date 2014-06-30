@@ -1,9 +1,7 @@
 import os
-import time
 import demjson
 import re
 from datetime import datetime, timedelta
-import copy
 from xml.etree import ElementTree as ET
 import subprocess
 import pymongo
@@ -28,7 +26,7 @@ def build_export(site,host):
 
 	}
 	threshold_values = {}
-	db = mongo_functions.mongo_db_conn(site,"nocout")	
+	db = mongo_functions.mongo_db_conn(site,"nocout")
 	for perf_file in os.listdir(_folder):
 		if perf_file.endswith(".xml"):
 			xml_file_list.append(perf_file)		
@@ -49,7 +47,7 @@ def build_export(site,host):
 		for path in file_paths:
 			m = -1
 		
-			data_series = do_export(site, path,params[file_paths.index(path)])
+			data_series = do_export(site, path,params[file_paths.index(path)], db)
 			data_dict.update({
 				"check_time": data_series.get('check_time'),
 				"local_timestamp": data_series.get('local_timestamp'),
@@ -57,14 +55,15 @@ def build_export(site,host):
 				})
 			ds_index = params[file_paths.index(path)]
 			data_dict.get('ds')[ds_index] = {"meta": {}, "data": []}
-			for d in data_series.get('data'):
+			
+			ds_values = data_series['data'][:-1]
+			for d in ds_values:
 					m += 1
-					if d[-1]:
-						temp_dict = dict(
-								time=data_series.get('check_time') + timedelta(minutes=m),
-								value=d[-1]
-						)
-						data_dict.get('ds').get(ds_index).get('data').append(temp_dict)
+					temp_dict = dict(
+						time=data_series.get('check_time') + timedelta(minutes=m),
+						value=d[-1]
+					)
+					data_dict.get('ds').get(ds_index).get('data').append(temp_dict)
 			data_dict.get('ds').get(ds_index)['meta'] = threshold_values.get(ds_index)
 		if xml_file == '_HOST_.xml':
 			mongo_functions.mongo_db_insert(db,data_dict,"network_perf_data")
@@ -82,26 +81,37 @@ def build_export(site,host):
 		}
 
 
-def do_export(site, file_name,data_source):
+def do_export(site, file_name,data_source, db):
     data_series = {}
     cmd_output ={}
     CF = 'AVERAGE'
     resolution = '-300sec';
-    utc_time = datetime(1970, 1,1)
-    #Shifting the fetching time to -10mins, for the time being
-    end_time = datetime(2014, 6, 14, 14, 20)
-    start_time = end_time - timedelta(minutes=5)
+
+    # Data will be exported from last inserted entry in mongodb uptill current time
+    start_time = mongo_functions.get_latest_entry(db_type='mongodb', db=db)
+    # Get India times (GMT+5.30)
+    utc_time = datetime(1970, 1,1, 5, 30)
+    end_time = datetime.now()
+
+    year, month, day = end_time.year, end_time.month, end_time.day
+    hour, minute = end_time.hour, end_time.minute
+    #Tag : Subtracting 1 min as rrd doesn't write the current data, instantly
+    end_time = datetime(year, month, day, hour, minute-1)
+
+    if start_time is None:
+        start_time = end_time - timedelta(minutes=5)
+
     #end_time = datetime.now() - timedelta(minutes=10)
     #start_time = end_time - timedelta(minutes=5)
     start_epoch = int((start_time - utc_time).total_seconds())
     end_epoch = int((end_time - utc_time).total_seconds())
 
     #Subtracting 5:30 Hrs to epoch times, to get IST
-    start_epoch -= 19800
-    end_epoch -= 19800
+    #start_epoch -= 19800
+    #end_epoch -= 19800
 
-    cmd = '/omd/sites/%s/bin/rrdtool xport --json -s %s -e %s '\
-        %(site, str(start_epoch), str(end_epoch))
+    cmd = '/omd/sites/%s/bin/rrdtool xport --json --daemon unix:/omd/sites/%s/tmp/run/rrdcached.sock -s %s -e %s '\
+        %(site,site, str(start_epoch), str(end_epoch))
     RRAs = ['MIN','MAX','AVERAGE']
 
     for RRA in RRAs:
@@ -123,6 +133,7 @@ def do_export(site, file_name,data_source):
     start_check = datetime.fromtimestamp(start_check)
     end_check = datetime.fromtimestamp(end_check)
     local_timestamp = pivot_timestamp(start_check)
+
     data_series.update({
         "site": site,
         "legend": legend,

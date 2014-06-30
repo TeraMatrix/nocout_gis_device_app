@@ -3,6 +3,7 @@ from configobj import ConfigObj
 import os
 
 
+# Not at use, as of now
 def parse_config():
     file_path = os.path.dirname(os.path.abspath(__file__))
     path = [path for path in file_path.split('/')]
@@ -25,7 +26,7 @@ def parse_config():
 
 
 def parse_config_obj():
-    config = ConfigObj('config.ini')
+    config = ConfigObj('nocout/config.ini')
     
     return config
 
