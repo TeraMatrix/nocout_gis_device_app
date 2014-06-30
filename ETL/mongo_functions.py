@@ -1,5 +1,9 @@
 import pymongo
+from datetime import datetime
 import rrd_migration
+from operator import itemgetter
+
+
 def mongo_conn(**kwargs):
 	"""
     	Mongodb connection object
@@ -46,8 +50,40 @@ def mongo_db_insert(db,event_dict,flag):
 			db.device_perf.insert(event_dict)
 		elif flag == "network_perf_data":
 			db.network_perf.insert(event_dict)
+			print "Data inserted into Mongodb"
+			print datetime.now()
                 return success
         else:
                 print "Mongo_db insertion failed"
                 return failure
+
+
+def get_latest_entry(db_type=None, db=None, site=None):
+    latest_time = None
+    if db_type == 'mongodb':
+        cur = db.network_perf.find({}, {"check_time": 1, "ds": 1}).sort("_id", -1).limit(1)
+        for c in cur:
+            entry = c
+            data = entry.get('ds').get('rta').get('data')
+            data = sorted(data, key=itemgetter('time'), reverse=True)
+            try:
+                latest_time = data[0].get('time')
+            except IndexError, e:
+                return latest_time
+    elif db_type == 'mysql':
+        query = "SELECT `check_timestamp` FROM performance_performancemetric WHERE"+\
+            " `site_name` = '%s' ORDER BY `id` DESC LIMIT 1" % site
+        cursor = db.cursor()
+        cursor.execute(query)
+        entry = cursor.fetchone()
+        try:
+            latest_time = entry[0]
+            latest_time = datetime.fromtimestamp(latest_time)
+        except TypeError, e:
+            cursor.close()
+            return latest_time
+
+        cursor.close()
+
+    return latest_time
 
