@@ -1,5 +1,5 @@
 """nocout_gis Device App web services to C/U/D a host/service into Nagios
-monitoring core through check_mk APIs.
+monitoring core through check_mk functions.
 """
 
 from wato import *
@@ -99,8 +99,10 @@ def addhost():
                 "error_message": payload.get('host') + " " + key + " is missing"
             })
             return response
+
     give_permissions(hosts_file)
     load_file(hosts_file)
+
     if len(g_host_vars['all_hosts']) > 1000:
         response.update({
                 "success": 0,
@@ -138,6 +140,9 @@ def addhost():
 
 
 def addservice():
+    global host_tags
+    tags = []
+    service_tuple = []
     response = {
         "success": 1,
         "device_name": html.var('device_name'),
@@ -154,11 +159,29 @@ def addservice():
         "agent_tag": html.var('agent_tag')
     }
     new_host = nocout_find_host(payload.get('host'))
-    if new_host:
+    if not new_host:
+        threshold_items = {}
+        threshold_values = None
+        cmd_params = json.loads(payload.get('cmd_params'))
+        for ds, thresholds in cmd_params.items():
+            threshold_items[ds] = ()
+            for thres in thresholds.values():
+                threshold_items[ds] += (thres,)
+        for k, v in threshold_items.items():
+            threshold_values = v
         give_permissions(rules_file)
-        host_tags = host_tags.get(payload.get('agent_tag'))
-        service_tuple = ((payload.get('service_name', None, payload.get('cmd_params'))), [host_tags], [payload.get('host')])
+        tags = host_tags.get(payload.get('agent_tag'))
+        service_tuple = ((payload.get('service'), None, threshold_values), [tags], [payload.get('host')])
         save_service(payload.get('service'), service_tuple)
+    else:
+        response.update({
+            "success": 0,
+            "error_message": html.var('device_name') + " not added yet",
+            "message": "Service not added",
+            "error_code": 1
+        })
+
+    return response
 
 
 def edithost():
@@ -206,6 +229,10 @@ def edithost():
     return response
 
 
+def deletehost():
+    pass
+
+
 def sync():
     sites_affected = []
     response = {
@@ -246,7 +273,8 @@ def nocout_distributed_sites():
     nocout_site_vars = {
         "sites": {}
     }
-    execfile(sites_mk, nocout_site_vars, nocout_site_vars)
+    sites_file = defaults.default_config_dir + "/multisite.d/sites.mk"
+    execfile(sites_file, nocout_site_vars, nocout_site_vars)
 
     return nocout_site_vars.get("sites")
 
@@ -273,11 +301,10 @@ def nocout_push_snapshot_to_site(site, site_attrs, restart):
 
 def nocout_create_sync_snapshot():
     global nocout_replication_paths
-    if os.path.exists(sync_snapshot_file):
-        #os.remove(sync_snapshot_file)
-        tmp_path = "%s-%s" % (sync_snapshot_file, 'nocout')
-        multitar.create(tmp_path, nocout_replication_paths)
-        os.rename(tmp_path, sync_snapshot_file)
+    #os.remove(sync_snapshot_file)
+    tmp_path = "%s-%s" % (sync_snapshot_file, 'nocout')
+    multitar.create(tmp_path, nocout_replication_paths)
+    os.rename(tmp_path, sync_snapshot_file)
 
 
 def nocout_create_snapshot():
@@ -350,13 +377,14 @@ def save_host(file_path):
 
 def save_service(service_name, service_tuple):
     try:
-        f = os.open(rules_file, os.O_RDWR)
+        with open(rules_file, 'a') as f:
+            f.write("\nstatic_checks.setdefault('" + service_name + "', [])\n")
+            f.write("static_checks['" + service_name + "'] =  [\n")
+            f.write(pprint.pformat(service_tuple))
+            f.write(",\n")
+            f.write("] + static_checks['" + service_name + "']\n\n")
     except OSError, e:
-        raise OSError, e
-        return False
-    fcntl.flock(f, fcntl.LOCK_EX)
-    #TODO:: Save the check_info here
-    os.close(f)
+        raise OSError(e)
     
 
 def nocout_add_host_attributes(host_attrs):
@@ -381,6 +409,7 @@ def nocout_add_host_attributes(host_attrs):
 
 def nocout_find_host(host):
     new_host = True
+    load_file(hosts_file)
     global g_host_vars
     for entry in g_host_vars['all_hosts']:
         if host in entry:
