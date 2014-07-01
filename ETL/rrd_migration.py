@@ -25,6 +25,7 @@ def build_export(site,host):
 		"ds": {}
 
 	}
+    perf_db = None
 	threshold_values = {}
 	db = mongo_functions.mongo_db_conn(site,"nocout")
 	for perf_file in os.listdir(_folder):
@@ -37,10 +38,6 @@ def build_export(site,host):
 		except IOError, e:
 			raise IOError ,e
 
-		if xml_file == '_HOST_.xml':
-			db = db['network_perf']
-		else:
-			db = db['service_perf']
 		perf_data = root.find("NAGIOS_PERFDATA").text.strip()
 		serv_disc = root.find("NAGIOS_SERVICEDESC").text.strip()
 		data_dict['service'] = serv_disc
@@ -92,7 +89,7 @@ def do_export(site, file_name,data_source, db, serv):
     resolution = '-300sec';
 
     # Data will be exported from last inserted entry in mongodb uptill current time
-    start_time = mongo_functions.get_latest_entry(db_type='mongodb', db=db,table_name=None, serv=serv)
+    start_time = mongo_functions.get_latest_entry(db_type='mongodb', db=db,table_name=None, serv=serv, ds=data_source)
     # Get India times (GMT+5.30)
     utc_time = datetime(1970, 1,1, 5, 30)
     end_time = datetime.now()
