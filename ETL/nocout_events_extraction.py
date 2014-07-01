@@ -44,17 +44,14 @@ def extract_nagios_events_live():
 	if start_epoch == None:
 		start_time = datetime.now() - timedelta(minutes=10)
 		start_epoch = int((start_time - utc_time).total_seconds())
-	print start_epoch
         end_time = datetime.now()
         end_epoch = int((end_time - utc_time).total_seconds())
 	
-	print end_epoch
         # sustracting 5.30 hours        
         host_event_dict ={}
         serv_event_dict={}
 	query = "GET log\nColumns: log_type log_time log_state_type log_state  host_name service_description options host_address\nFilter: log_time > %s\nFilter: class = 0\nFilter: class = 1\nFilter: class = 2\nFilter: class = 3\nFilter: class = 4\nFilter: class = 6\nOr: 6\n" %(start_epoch) 
 	output= rrd_main.get_from_socket(site, query)
-	print output
 	for log_attr in output.split('\n'):
 		log_split = [log_split for log_split in log_attr.split(';')]
 		if log_split[0] == "CURRENT HOST STATE":
