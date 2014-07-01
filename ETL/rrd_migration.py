@@ -25,6 +25,7 @@ def build_export(site,host):
 		"ds": {}
 
 	}
+    	perf_db = None
 	threshold_values = {}
 	db = mongo_functions.mongo_db_conn(site,"nocout")
 	for perf_file in os.listdir(_folder):
@@ -47,7 +48,7 @@ def build_export(site,host):
 		for path in file_paths:
 			m = -1
 		
-			data_series = do_export(site, path,params[file_paths.index(path)], db)
+			data_series = do_export(site, path,params[file_paths.index(path)], db, serv_disc)
 			data_dict.update({
 				"check_time": data_series.get('check_time'),
 				"local_timestamp": data_series.get('local_timestamp'),
@@ -81,14 +82,14 @@ def build_export(site,host):
 		}
 
 
-def do_export(site, file_name,data_source, db):
+def do_export(site, file_name,data_source, db, serv):
     data_series = {}
     cmd_output ={}
     CF = 'AVERAGE'
     resolution = '-300sec';
 
     # Data will be exported from last inserted entry in mongodb uptill current time
-    start_time = mongo_functions.get_latest_entry(db_type='mongodb', db=db,table_name=None)
+    start_time = mongo_functions.get_latest_entry(db_type='mongodb', db=db,table_name=None, serv=serv, ds=data_source)
     # Get India times (GMT+5.30)
     utc_time = datetime(1970, 1,1, 5, 30)
     end_time = datetime.now()
