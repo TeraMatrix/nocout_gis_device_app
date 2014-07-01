@@ -88,7 +88,7 @@ def do_export(site, file_name,data_source, db):
     resolution = '-300sec';
 
     # Data will be exported from last inserted entry in mongodb uptill current time
-    start_time = mongo_functions.get_latest_entry(db_type='mongodb', db=db)
+    start_time = mongo_functions.get_latest_entry(db_type='mongodb', db=db,table_name=None)
     # Get India times (GMT+5.30)
     utc_time = datetime(1970, 1,1, 5, 30)
     end_time = datetime.now()
