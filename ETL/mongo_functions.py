@@ -61,7 +61,7 @@ def mongo_db_insert(db,event_dict,flag):
 def get_latest_entry(db_type=None, db=None, site=None,table_name=None, serv="_HOST_"):
     latest_time = None
     if db_type == 'mongodb':
-        cur = db.network_perf.find({"service": serv}, {"check_time": 1, "ds": 1}).sort("_id", -1).limit(1)
+        cur = db.find({"service": serv}, {"check_time": 1, "ds": 1}).sort("_id", -1).limit(1)
         for c in cur:
             	entry = c
             	data = entry.get('ds').get('rta').get('data')

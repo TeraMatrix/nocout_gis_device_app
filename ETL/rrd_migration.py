@@ -37,6 +37,10 @@ def build_export(site,host):
 		except IOError, e:
 			raise IOError ,e
 
+		if xml_file == '_HOST_.xml':
+			db = db['network_perf']
+		else:
+			db = db['service_perf']
 		perf_data = root.find("NAGIOS_PERFDATA").text.strip()
 		serv_disc = root.find("NAGIOS_SERVICEDESC").text.strip()
 		data_dict['service'] = serv_disc
