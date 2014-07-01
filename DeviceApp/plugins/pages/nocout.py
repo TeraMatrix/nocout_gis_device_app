@@ -1,5 +1,9 @@
+"""Apache page handler for nocout_gis Device App web-services
+"""
+
 import nocout
 
+
 pagehandlers.update({
-    "add_host": nocout.add_host
+    "nocout": nocout.main
 })

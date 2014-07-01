@@ -14,7 +14,7 @@ def main(**configs):
     docs = []
     db = mysql_conn(configs=configs)
     # Get the time for latest entry in mysql
-    start_time = get_latest_entry(db_type='mysql', db=db, site=configs.get('site'),table_name="performance_performancemetric")
+    start_time = get_latest_entry(db_type='mysql', db=db, site=configs.get('site'),table_name="service_performance_performancemetric")
 
     end_time = datetime.now()
     if start_time is None:
@@ -24,6 +24,7 @@ def main(**configs):
     for doc in docs:
         values_list = build_data(doc)
         data_values.extend(values_list)
+	print  doc
     field_names = [
         'device_name',
         'service_name',
@@ -39,30 +40,28 @@ def main(**configs):
         'sys_timestamp',
         'check_timestamp'
     ]
-    insert_data('performance_performancemetric', data_values, configs=configs)
-    print "Data inserted into mysql db"
+    insert_data('service_performance_performancemetric', data_values, configs=configs)
+    print "Data inserted into my mysql db"
     
 
 def read_data(start_time, end_time, **kwargs):
 
     db = None
     port = None
-    docs = []
     #end_time = datetime(2014, 6, 26, 18, 30)
     #start_time = end_time - timedelta(minutes=10)
-    
+    docs = [] 
     db = mongo_conn(
         host=kwargs.get('configs').get('host'),
         port=int(kwargs.get('configs').get('port')),
         db_name=kwargs.get('configs').get('nosql_db')
     )
     if db:
-        cur = db.network_perf.find({
+        cur = db.service_perf.find({
             "check_time": {"$gt": start_time, "$lt": end_time}
         })
         for doc in cur:
             docs.append(doc)
-     
     return docs
 
 def build_data(doc):
@@ -91,11 +90,11 @@ def build_data(doc):
             )
             values_list.append(t)
             t = ()
-
     return values_list
 
 def insert_data(table, data_values, **kwargs):
     db = mysql_conn(configs=kwargs.get('configs'))
+    print db,data_values
     query = "INSERT INTO `%s` " % table
     query += """
             (device_name, service_name, machine_name, 
@@ -104,6 +103,7 @@ def insert_data(table, data_values, **kwargs):
             critical_threshold, sys_timestamp, check_timestamp) 
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """
+    print query
     cursor = db.cursor()
     try:
         cursor.executemany(query, data_values)
