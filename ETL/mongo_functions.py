@@ -68,19 +68,19 @@ def get_latest_entry(db_type=None, db=None, site=None,table_name=None, serv='_HO
                 	data = entry.get('ds').get(ds).get('data')
                 	data = sorted(data, key=itemgetter('time'), reverse=True)
                 	try:
-                    	latest_time = data[0].get('time')
-                    except IndexError, e:
-                    	return latest_time
+                    		latest_time = data[0].get('time')
+                    	except IndexError, e:
+                    		return latest_time
         else:
             cur = db.service_perf.find({"service": serv}, {"check_time": 1, "ds": 1}).sort("_id", -1).limit(1)
             for c in cur:
-                    entry = c
-                    data = entry.get('ds').get(ds).get('data')
-                    data = sorted(data, key=itemgetter('time'), reverse=True)
-                    try:
-                        latest_time = data[0].get('time')
-                    except IndexError, e:
-                        return latest_time
+			entry = c
+                    	data = entry.get('ds').get(ds).get('data')
+                    	data = sorted(data, key=itemgetter('time'), reverse=True)
+                    	try:
+                        	latest_time = data[0].get('time')
+                    	except IndexError, e:
+                        	return latest_time
     elif db_type == 'mysql':
         query = "SELECT `check_timestamp` FROM `%s` WHERE" % table_name +\
             " `site_name` = '%s' ORDER BY `id` DESC LIMIT 1" % (site)
