@@ -3,7 +3,7 @@ import MySQLdb
 import pymongo
 from datetime import datetime, timedelta
 from rrd_migration import mongo_conn, db_port
-from nocout_events_extraction import get_latest_event_entry
+from events_rrd_migration import get_latest_event_entry
 import subprocess
 import mongo_functions
 
@@ -13,7 +13,7 @@ def main(**configs):
     docs = []
     end_time = datetime.now()
     db = mysql_conn(configs=configs)
-    start_time = get_latest_event_entry(db_type='mysql', db=db, site=configs.get('site'),table_name="device_service_events")
+    start_time = get_latest_event_entry(db_type='mysql', db=db, site=configs.get('site'),table_name="device_network_events")
     #start_time = end_time - timedelta(minutes=5)
     start_time = get_epoch_time(start_time)
     end_time = get_epoch_time(end_time)
@@ -22,7 +22,7 @@ def main(**configs):
     for doc in docs:
         values_list = build_data(doc)
         data_values.extend(values_list)
-    insert_data('device_service_events', data_values,configs=configs)
+    insert_data('device_network_events', data_values,configs=configs)
 
 def read_data(site_name, start_time, end_time):
     db = None
@@ -30,7 +30,7 @@ def read_data(site_name, start_time, end_time):
     docs = []
     db=mongo_functions.mongo_db_conn(site_name,"nocout")
     if db:
-        cur = db.nocout_service_event_log.find({
+        cur = db.nocout_host_event_log.find({
             "time": {"$gt": start_time, "$lt": end_time}
         })
         for doc in cur:
@@ -42,7 +42,6 @@ def build_data(doc):
 	time = doc.get('time')
 	t = (
         doc.get('host_name'),
-        doc.get('event_name'),
         time,
         doc.get('discription'),
         doc.get('status'),
@@ -59,8 +58,8 @@ def insert_data(table,data_values,**kwargs):
 	db = mysql_conn(configs=kwargs.get('configs'))
 	query = 'INSERT INTO `%s` ' % table
 	query += """
-		(host,service,time,event_description,status,state_type,site_name,
-		ip_address,event_type)VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s)
+		(host,time,event_description,status,state_type,site_name,
+		ip_address,event_type)VALUES(%s, %s, %s, %s, %s, %s, %s, %s)
     		"""
 	cursor = db.cursor()
     	try:
