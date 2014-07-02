@@ -5,9 +5,9 @@ def main():
     configs = parse_config_obj()
     for section, options in configs.items():
         
-	script = options.get('network').get('script')
-	migration_script = __import__(script)
-	migration_script.main(site=options.get('site'), host=options.get('host'),
+	network_script = options.get('network').get('script')
+	network_migration_script = __import__(network_script)
+	network_migration_script.main(site=options.get('site'), host=options.get('host'),
 		user=options.get('user'), port=options.get('port'),
 		sql_passwd=options.get('sql_passwd'),
 		nosql_db=options.get('network').get('nosql_db'),
