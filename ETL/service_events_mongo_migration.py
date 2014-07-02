@@ -13,7 +13,7 @@ def main(**configs):
     docs = []
     end_time = datetime.now()
     db = mysql_conn(configs=configs)
-    start_time = get_latest_event_entry(db_type='mysql', db=db, site=configs.get('site'),table_name="device_service_events")
+    start_time = get_latest_event_entry(db_type='mysql', db=db, site=configs.get('site'), table_name=configs.get('table_name'))
     #start_time = end_time - timedelta(minutes=5)
     start_time = get_epoch_time(start_time)
     end_time = get_epoch_time(end_time)
@@ -22,7 +22,7 @@ def main(**configs):
     for doc in docs:
         values_list = build_data(doc)
         data_values.extend(values_list)
-    insert_data('device_service_events', data_values,configs=configs)
+    insert_data(configs.get('table_name'), data_values,configs=configs)
 
 def read_data(site_name, start_time, end_time):
     db = None
