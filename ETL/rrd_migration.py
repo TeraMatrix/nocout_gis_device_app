@@ -150,8 +150,8 @@ def do_export(site, file_name,data_source, db, serv):
 def get_threshold(perf_data):
     threshold_values = {}
 
-    if len(perf_data) == 1:
-        return threshold_values
+    #if len(perf_data) == 1:
+     #   return threshold_values
 
     for param in perf_data.split(" "):
         if ';' in param.split("=")[1]:
