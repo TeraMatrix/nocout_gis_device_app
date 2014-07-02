@@ -272,12 +272,6 @@ def sync():
 
     nocout_create_sync_snapshot()
     nocout_sites = nocout_distributed_sites()
-    if len(nocout_sites) == 1:
-        response.update({
-            "success": 0,
-            "message": "No slave multisites present"
-        })
-        return response
 
     for site, attrs in nocout_sites.items():
         if attrs.get("replication") == "slave":
