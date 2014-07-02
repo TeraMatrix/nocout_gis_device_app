@@ -1,13 +1,18 @@
 #!/usr/bin/python
 
 def check_radwin_service_throughput(item, _no_params, info):
-	service_throughput  = int(info[0][0])
-	if service_throughput == 0 or service_throughput < -1:
-		state = 2
-		infotext = "Device service throughput is Zero" 
-	else:
+	try:
+		service_throughput  = int(info[0][0])
+		if service_throughput == 0 or service_throughput < -1:
+			state = 0
+			infotext = "Device service throughput is Zero or negative" 
+		else:
+			state = 0
+			infotext = "Device service_throughput is %d " % service_throughput
+	except ValueError:
 		state = 0
-		infotext = "Device service_throughput is %d " % service_throughput
+		infotext = "Unknown value"
+		service_throughput = "Unknown value"	
 	return (state,  infotext,[("Service_throughput",service_throughput)])
 
 check_info["radwin_service_throughput"] = {
