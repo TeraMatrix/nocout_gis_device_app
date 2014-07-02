@@ -14,8 +14,6 @@ def main(**configs):
     end_time = datetime.now()
     db = mysql_conn(configs=configs)
     start_time = get_latest_event_entry(db_type='mysql', db=db, site=configs.get('site'),table_name=configs.get('table_name'))
-    if start_time is None:
-        start_time = end_time - timedelta(minutes=5)
     #start_time = end_time - timedelta(minutes=5)
     start_time = get_epoch_time(start_time)
     end_time = get_epoch_time(end_time)
@@ -32,9 +30,12 @@ def read_data(site_name, start_time, end_time):
     docs = []
     db=mongo_functions.mongo_db_conn(site_name,"nocout")
     if db:
-        cur = db.nocout_host_event_log.find({
-            "time": {"$gt": start_time, "$lt": end_time}
-        })
+        if start_time is None:
+            cur = db.nocout_host_event_log.find()
+        else:
+            cur = db.nocout_host_event_log.find({
+                "time": {"$gt": start_time, "$lt": end_time}
+            })
         for doc in cur:
             docs.append(doc)
     return docs

@@ -30,9 +30,12 @@ def read_data(site_name, start_time, end_time):
     docs = []
     db=mongo_functions.mongo_db_conn(site_name,"nocout")
     if db:
-        cur = db.nocout_service_event_log.find({
-            "time": {"$gt": start_time, "$lt": end_time}
-        })
+        if start_time is None:
+            cur = db.nocout_service_event_log.find()
+        else:
+            cur = db.nocout_service_event_log.find({
+                "time": {"$gt": start_time, "$lt": end_time}
+            })
         for doc in cur:
             docs.append(doc)
     return docs
