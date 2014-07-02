@@ -24,7 +24,6 @@ def main(**configs):
     for doc in docs:
         values_list = build_data(doc)
         data_values.extend(values_list)
-	print  doc
     field_names = [
         'device_name',
         'service_name',
@@ -94,7 +93,6 @@ def build_data(doc):
 
 def insert_data(table, data_values, **kwargs):
     db = mysql_conn(configs=kwargs.get('configs'))
-    print db,data_values
     query = "INSERT INTO `%s` " % table
     query += """
             (device_name, service_name, machine_name, 
@@ -103,7 +101,6 @@ def insert_data(table, data_values, **kwargs):
             critical_threshold, sys_timestamp, check_timestamp) 
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """
-    print query
     cursor = db.cursor()
     try:
         cursor.executemany(query, data_values)
