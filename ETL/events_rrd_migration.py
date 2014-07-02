@@ -80,7 +80,7 @@ def extract_nagios_events_live():
                 	#print host_event_dict
                		mongo_functions.mongo_db_insert(db,host_event_dict,"host_event")
 		elif log_split[0] == "HOST FLAPPING ALERT":
-			host_ip = log_split[11]
+			host_ip = log_split[9]
 			host_event_dict=dict(time=int(log_split[1]),host_name=log_split[4],status=log_split[7],
                                                         state_type=None,discription=log_split[8],
                                                         ip_address=host_ip,event_type_name=log_split[0],site_id=site)
