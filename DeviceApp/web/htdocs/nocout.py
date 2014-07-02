@@ -156,23 +156,34 @@ def addservice():
         "service": html.var("service_name"),
         "serv_params": html.var('serv_params'),
         "cmd_params": html.var('cmd_params'),
-        "agent_tag": html.var('agent_tag')
+        "agent_tag": html.var('agent_tag'),
+        "snmp_port": html.var("snmp_port")
     }
     new_host = nocout_find_host(payload.get('host'))
     if not new_host:
         threshold_items = {}
         threshold_values = None
-        cmd_params = json.loads(payload.get('cmd_params'))
-        for ds, thresholds in cmd_params.items():
-            threshold_items[ds] = ()
-            for thres in thresholds.values():
-                threshold_items[ds] += (thres,)
-        for k, v in threshold_items.items():
-            threshold_values = v
+
+        if payload.get('cmd_params'):
+            cmd_params = json.loads(payload.get('cmd_params'))
+            for ds, thresholds in cmd_params.items():
+                threshold_items[ds] = ()
+                threshold_items[ds] += (thresholds.get('warning'),)
+                threshold_items[ds] += (thresholds.get('critical'),)
+            for k, v in threshold_items.items():
+                threshold_values = v
+
+        snmp_port_tuple = None
+        if payload.get('snmp_port'):
+            snmp_port_tuple = (int(payload.get('snmp_port')),[],[payload.get('host')])
+        elif payload.get('service').lower() != 'ping':
+            snmp_port_tuple = (161,[],[payload.get('host')])
+
         give_permissions(rules_file)
         tags = host_tags.get(payload.get('agent_tag'))
-        service_tuple = ((payload.get('service'), None, threshold_values), [tags], [payload.get('host')])
-        save_service(payload.get('service'), service_tuple)
+        #service_tuple = ((payload.get('service'), None, threshold_values), [tags], [payload.get('host')])
+        service_tuple = ([payload.get('host')], payload.get('service'), None, threshold_values)
+        save_service(payload.get('service'), service_tuple, snmp_port_tuple)
     else:
         response.update({
             "success": 0,
@@ -180,6 +191,8 @@ def addservice():
             "message": "Service not added",
             "error_code": 1
         })
+    # Push these configs to all slave multisites
+    sync()
 
     return response
 
@@ -230,7 +243,22 @@ def edithost():
 
 
 def deletehost():
-    pass
+    response = {
+        "success": 1,
+        "device_name": html.var('device_name'),
+        "message": "Device deleted successfully",
+        "error_code": None,
+        "error_message": None
+    }
+    payload = {
+        "host": html.var("device_name"),
+        "attr_alias": html.var("device_alias"),
+        "attr_ipaddress": html.var("ip_address"),
+        "site": html.var("site"),
+        "agent_tag": html.var("agent_tag")
+    }
+    load_file(hosts_file)
+    new_host = nocout_find_host(payload.get('host'))
 
 
 def sync():
@@ -375,7 +403,20 @@ def save_host(file_path):
     return True
 
 
-def save_service(service_name, service_tuple):
+def save_service(service_name, service_tuple, snmp_port_tuple):
+    try:
+        with open(rules_file, 'a') as f:
+            f.write("\nchecks += [\n")
+            f.write(" " + pprint.pformat(service_tuple) + "\n")
+            f.write("]\n")
+            f.write("\nsnmp_ports += [\n")
+            f.write(" " + pprint.pformat(snmp_port_tuple) + "\n")
+            f.write("]\n")
+    except OSError, e:
+        raise OSError(e)
+
+
+def save_service_old(service_name, service_tuple):
     try:
         with open(rules_file, 'a') as f:
             f.write("\nstatic_checks.setdefault('" + service_name + "', [])\n")
