@@ -14,6 +14,8 @@ def main(**configs):
     end_time = datetime.now()
     db = mysql_conn(configs=configs)
     start_time = get_latest_event_entry(db_type='mysql', db=db, site=configs.get('site'),table_name=configs.get('table_name'))
+    if start_time is None:
+        start_time = end_time - timedelta(minutes=5)
     #start_time = end_time - timedelta(minutes=5)
     start_time = get_epoch_time(start_time)
     end_time = get_epoch_time(end_time)
