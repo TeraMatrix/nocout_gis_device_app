@@ -14,7 +14,7 @@ def main(**configs):
     docs = []
     db = mysql_conn(configs=configs)
     # Get the time for latest entry in mysql
-    start_time = get_latest_entry(db_type='mysql', db=db, site=configs.get('site'),table_name="performance_performancemetric")
+    start_time = get_latest_entry(db_type='mysql', db=db, site=configs.get('site'),table_name=configs.get('table_name'))
 
     end_time = datetime.now()
     if start_time is None:
@@ -39,7 +39,7 @@ def main(**configs):
         'sys_timestamp',
         'check_timestamp'
     ]
-    insert_data('performance_performancemetric', data_values, configs=configs)
+    insert_data(configs.get('table_name'), data_values, configs=configs)
     print "Data inserted into mysql db"
     
 
