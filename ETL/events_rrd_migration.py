@@ -87,7 +87,7 @@ def extract_nagios_events_live():
 			mongo_functions.mongo_db_insert(db,host_event_dict,"host_event")
 		elif log_split[0] == "SERVICE ALERT" or log_split[0] == "INITIAL SERVICE STATE":
 			
-			host_ip = log_split[12]
+			host_ip = log_split[9]
 
 			serv_event_dict=dict(time=int(log_split[1]),host_name=log_split[4],status=log_split[8],
                                                         state_type=log_split[2],discription=log_split[11],
