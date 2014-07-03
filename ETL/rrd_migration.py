@@ -8,7 +8,7 @@ import pymongo
 import rrd_main
 import mongo_functions
 
-def build_export(site,host):
+def build_export(site,host,ip):
 	_folder = '/opt/omd/sites/%s/var/pnp4nagios/perfdata/%s/' % (site,host)
 	xml_file_list = []
 	#tmp_service =service
@@ -22,7 +22,8 @@ def build_export(site,host):
 	data_dict = {
 		"host": host,
 		"service": None,
-		"ds": {}
+		"ds": {},
+		"ip_address": ip
 
 	}
     	perf_db = None
@@ -78,7 +79,8 @@ def build_export(site,host):
 		data_dict = {
 				"host": host,
 				"service": None,
-				"ds": {}
+				"ds": {},
+				"ip_address": ip
 		}
 
 
@@ -234,8 +236,8 @@ def insert_data(data_dict):
         return "Data couldn't be inserted into Mongodb"
 
 
-def rrd_migration_main(site,host,services):
-	build_export(site,host)
+def rrd_migration_main(site,host,services,ip):
+	build_export(site,host,ip)
         #for service in services[0]:
 
 """if __name__ == '__main__':
