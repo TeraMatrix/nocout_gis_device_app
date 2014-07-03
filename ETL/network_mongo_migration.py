@@ -17,8 +17,6 @@ def main(**configs):
     start_time = get_latest_entry(db_type='mysql', db=db, site=configs.get('site'),table_name=configs.get('table_name'))
 
     end_time = datetime.now()
-    if start_time is None:
-        start_time = end_time - timedelta(minutes=5)
 
     docs = read_data(start_time, end_time, configs=configs)
     for doc in docs:
@@ -58,9 +56,12 @@ def read_data(start_time, end_time, **kwargs):
         db_name=kwargs.get('configs').get('nosql_db')
     )
     if db:
-        cur = db.network_perf.find({
-            "check_time": {"$gt": start_time, "$lt": end_time}
-        })
+    	if start_time is None:
+            cur = db.network_perf.find()
+	else:
+        	cur = db.network_perf.find({
+            	"check_time": {"$gt": start_time, "$lt": end_time}
+        	})
         for doc in cur:
             docs.append(doc)
      
