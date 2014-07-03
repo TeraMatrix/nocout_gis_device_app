@@ -1,0 +1,30 @@
+#!/usr/bin/python
+
+def check_radwin_ul_utilization(item, _no_params, info):
+	try:
+		if not info[0]:
+			return (3,"No response from device")
+		status_list = []
+		infotext = ""
+		for index in range(len(info)):
+			link_in_octets  = info[index][1]
+                        if_name = info[index][0]
+                        if if_name == None:
+                                if_name = "unknown interface name"
+			status_list.append((if_name,link_in_octets))
+                state = 0
+                for name,in_octets,in status_list:
+                        infotext += "[%s] ul_utilization:%s" %(name,in_octets)
+        except ValueError:
+                state = 0
+                infotext = "interface utilization type not correct"
+                return (state,infotext,[])
+        return (state,  infotext, status_list)
+
+check_info["radwin_ul_utilization"] = {
+    'check_function'        :  check_radwin_ul_utilization,
+    'service_description'   :  'radwin_ul_utilization',
+    'has_perfdata'          :  True,
+}
+
+snmp_info["radwin_ul_utilization"] = ( ".1.3.6.1.2.1.2.2.1", [ "2" ,"10"] )
