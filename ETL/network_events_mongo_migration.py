@@ -48,10 +48,8 @@ def build_data(doc):
         time,
         doc.get('discription'),
         doc.get('status'),
-        doc.get('state_type'),
         doc.get('site_id'),
 	doc.get('ip_address'),
-	doc.get('event_type_name'),
 	)
 	values_list.append(t)
 	t = ()
@@ -61,8 +59,8 @@ def insert_data(table,data_values,**kwargs):
 	db = mysql_conn(configs=kwargs.get('configs'))
 	query = 'INSERT INTO `%s` ' % table
 	query += """
-		(host,time,event_description,status,state_type,site_name,
-		ip_address,event_type)VALUES(%s, %s, %s, %s, %s, %s, %s, %s)
+		(host,time,event_description,status,site_name,
+		ip_address)VALUES(%s, %s, %s, %s, %s, %s)
     		"""
 	cursor = db.cursor()
     	try:

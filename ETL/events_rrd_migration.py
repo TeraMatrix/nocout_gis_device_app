@@ -57,16 +57,18 @@ def extract_nagios_events_live():
 		if log_split[0] == "CURRENT HOST STATE":
 			host_ip = log_split[11]
                         host_event_dict=dict(time=int(log_split[1]),host_name=log_split[4],status=log_split[7],
-                                                        state_type=log_split[2],discription=log_split[11],
-                                                        ip_address=host_ip,event_type_name=log_split[0],site_id=site)
+                                                        discription=log_split[11],
+                                                        ip_address=host_ip,site_id=site)
 		
                		mongo_functions.mongo_db_insert(db,host_event_dict,"host_event")
 		elif log_split[0] == "CURRENT SERVICE STATE":
 			host_ip = log_split[12]
 
+			#state_type = log_split[2]
+			#event_type_name=log_split[0]
                         serv_event_dict=dict(time=int(log_split[1]),host_name=log_split[4],status=log_split[8],
-                                                        state_type=log_split[2],discription=log_split[11],
-                                                        ip_address=host_ip,event_type_name=log_split[0],event_name=log_split[5],site_id=site)
+                                                        discription=log_split[11],
+                                                        ip_address=host_ip,event_name=log_split[5],site_id=site)
                         #print serv_event_dict
                         mongo_functions.mongo_db_insert(db,serv_event_dict,"serv_event")
 	
@@ -74,31 +76,36 @@ def extract_nagios_events_live():
 		elif log_split[0] == "HOST ALERT" or log_split[0] == "INITIAL HOST STATE":
 			
 			host_ip = log_split[11]
+			#state_type = log_split[2]
+			#event_type_name=log_split[0]
 			host_event_dict=dict(time=int(log_split[1]),host_name=log_split[4],status=log_split[7],
-                                                        state_type=log_split[2],discription=log_split[10],
-                                                        ip_address=host_ip,event_type_name=log_split[0],site_id=site)
+                                                        discription=log_split[10],
+                                                        ip_address=host_ip,site_id=site)
                 	#print host_event_dict
                		mongo_functions.mongo_db_insert(db,host_event_dict,"host_event")
 		elif log_split[0] == "HOST FLAPPING ALERT":
 			host_ip = log_split[9]
+			#event_type_name=log_split[0]
 			host_event_dict=dict(time=int(log_split[1]),host_name=log_split[4],status=log_split[7],
-                                                        state_type=None,discription=log_split[8],
-                                                        ip_address=host_ip,event_type_name=log_split[0],site_id=site)
+                                                        discription=log_split[8],
+                                                        ip_address=host_ip,site_id=site)
 			mongo_functions.mongo_db_insert(db,host_event_dict,"host_event")
 		elif log_split[0] == "SERVICE ALERT" or log_split[0] == "INITIAL SERVICE STATE":
 			
-			host_ip = log_split[9]
-
+			host_ip = log_split[12]
+			#state_type = log_split[2]
+			#event_type_name=log_split[0]
 			serv_event_dict=dict(time=int(log_split[1]),host_name=log_split[4],status=log_split[8],
-                                                        state_type=log_split[2],discription=log_split[11],
-                                                        ip_address=host_ip,event_type_name=log_split[0],event_name=log_split[5],site_id=site)
+                                                        discription=log_split[11],
+                                                        ip_address=host_ip,event_name=log_split[5],site_id=site)
 			#print serv_event_dict
                		mongo_functions.mongo_db_insert(db,serv_event_dict,"serv_event")
 
 		elif log_split[0] == "SERVICE FLAPPING ALERT":
+			host_ip = log_split[11]
 			serv_event_dict=dict(time=int(log_split[1]),host_name=log_split[4],status=log_split[8],
-                                                        state_type=None,discription=log_split[9],
-                                                        ip_address=None,event_type_name=log_split[0],event_name=log_split[5],site_id=site)
+                                                        discription=log_split[9],
+                                                        ip_address=host_ip,event_name=log_split[5],site_id=site)
 			mongo_functions.mongo_db_insert(db,serv_event_dict,"serv_event")
 """
 		elif log_split[0] == "HOST NOTIFICATION":
