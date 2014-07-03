@@ -6,6 +6,7 @@ from rrd_migration import mongo_conn, db_port
 from events_rrd_migration import get_latest_event_entry
 import subprocess
 import mongo_functions
+import socket
 
 def main(**configs):
     data_values = []
