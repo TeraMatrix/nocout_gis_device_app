@@ -18,10 +18,10 @@ def get_host_services_name(site_name=None):
                 
             output = json.loads(get_from_socket(site_name, query))
             for host_name in output:
-                modified_query = "GET hosts\nColumns: host_services\n" +\
+                modified_query = "GET hosts\nColumns: host_services host_address\n" +\
                     "Filter: host_name = %s\nOutputFormat: json\n" % (host_name[0])
                 output= json.loads(get_from_socket(site_name, modified_query))
-                rrd_migration.rrd_migration_main(site_name, host_name[0], output[0])
+                rrd_migration.rrd_migration_main(site_name, host_name[0], output[0],output[0][1])
         except SyntaxError, e:
             raise MKGeneralException(("Can not get performance data: %s") % (e))
         except socket.error, msg:

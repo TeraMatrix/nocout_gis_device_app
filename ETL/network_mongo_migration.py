@@ -17,8 +17,6 @@ def main(**configs):
     start_time = get_latest_entry(db_type='mysql', db=db, site=configs.get('site'),table_name=configs.get('table_name'))
 
     end_time = datetime.now()
-    if start_time is None:
-        start_time = end_time - timedelta(minutes=5)
 
     docs = read_data(start_time, end_time, configs=configs)
     for doc in docs:
@@ -37,7 +35,8 @@ def main(**configs):
         'warning_threshold',
         'critical_threshold',
         'sys_timestamp',
-        'check_timestamp'
+        'check_timestamp',
+	'ip_address'
     ]
     insert_data(configs.get('table_name'), data_values, configs=configs)
     print "Data inserted into mysql db"
@@ -57,9 +56,12 @@ def read_data(start_time, end_time, **kwargs):
         db_name=kwargs.get('configs').get('nosql_db')
     )
     if db:
-        cur = db.network_perf.find({
-            "check_time": {"$gt": start_time, "$lt": end_time}
-        })
+    	if start_time is None:
+            cur = db.network_perf.find()
+	else:
+        	cur = db.network_perf.find({
+            	"check_time": {"$gt": start_time, "$lt": end_time}
+        	})
         for doc in cur:
             docs.append(doc)
      
@@ -87,7 +89,8 @@ def build_data(doc):
                 doc.get('ds').get(ds).get('meta').get('war'),
                 doc.get('ds').get(ds).get('meta').get('cric'),
                 local_time_epoch,
-                check_time_epoch
+                check_time_epoch,
+		doc.get('ip_address')
             )
             values_list.append(t)
             t = ()
@@ -101,8 +104,8 @@ def insert_data(table, data_values, **kwargs):
             (device_name, service_name, machine_name, 
             site_name, data_source, current_value, min_value, 
             max_value, avg_value, warning_threshold, 
-            critical_threshold, sys_timestamp, check_timestamp) 
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            critical_threshold, sys_timestamp, check_timestamp,ip_address) 
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s)
             """
     cursor = db.cursor()
     try:
