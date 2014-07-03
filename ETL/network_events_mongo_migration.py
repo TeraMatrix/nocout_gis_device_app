@@ -42,6 +42,7 @@ def read_data(site_name, start_time, end_time):
 
 def build_data(doc):
 	values_list = []
+	machine_name = get_machine_name()
 	time = doc.get('time')
 	t = (
         doc.get('host_name'),
@@ -50,6 +51,7 @@ def build_data(doc):
         doc.get('status'),
         doc.get('site_id'),
 	doc.get('ip_address'),
+	machine_name
 	)
 	values_list.append(t)
 	t = ()
@@ -60,7 +62,7 @@ def insert_data(table,data_values,**kwargs):
 	query = 'INSERT INTO `%s` ' % table
 	query += """
 		(host,time,event_description,status,site_name,
-		ip_address)VALUES(%s, %s, %s, %s, %s, %s)
+		ip_address,machine_name)VALUES(%s, %s, %s, %s, %s, %s,%s)
     		"""
 	cursor = db.cursor()
     	try:
@@ -88,6 +90,13 @@ def mysql_conn(db=None, **kwargs):
 
     return db
 
+def get_machine_name(machine_name=None):
+    try:
+        machine_name = socket.gethostname()
+    except Exception, e:
+        raise Exception(e)
+
+    return machine_name
 
 if __name__ == '__main__':
     main()
