@@ -1,5 +1,5 @@
 """nocout_gis Device App web services to C/U/D a host/service into Nagios
-monitoring core through check_mk functions.
+monitoring core.
 """
 
 from wato import *
@@ -163,15 +163,28 @@ def addservice():
     if not new_host:
         threshold_items = {}
         threshold_values = None
-
+        cmd_params = None
+        ping_levels = None
         if payload.get('cmd_params'):
-            cmd_params = json.loads(payload.get('cmd_params'))
-            for ds, thresholds in cmd_params.items():
-                threshold_items[ds] = ()
-                threshold_items[ds] += (thresholds.get('warning'),)
-                threshold_items[ds] += (thresholds.get('critical'),)
-            for k, v in threshold_items.items():
-                threshold_values = v
+            try:
+                cmd_params = json.loads(payload.get('cmd_params'))
+                for ds, thresholds in cmd_params.items():
+                    threshold_items[ds] = ()
+                    threshold_items[ds] += (int(thresholds.get('warning')),)
+                    threshold_items[ds] += (int(thresholds.get('critical')),)
+
+                if payload.get('service').lower() == 'ping':
+                    ping_levels = threshold_items
+                else:
+                    for k, v in threshold_items.items():
+                        threshold_values = v
+            except TypeError, e:
+                response.update({
+                    "success": 0,
+                    "message": "Service not added",
+                    "error_message": "cmd_params " + str(e).split(':')[0]
+                })
+                return response
 
         snmp_port_tuple = None
         if payload.get('snmp_port'):
@@ -179,11 +192,23 @@ def addservice():
         elif payload.get('service').lower() != 'ping':
             snmp_port_tuple = (161,[],[payload.get('host')])
 
+        serv_params = None
+        if payload.get('serv_params'):
+            try:
+                serv_params = json.loads(payload.get('serv_params'))
+            except TypeError, e:
+                response.update({
+                    "success": 0,
+                    "message": "Service not added",
+                    "error_message": "serv_params " + str(e).split(':')[0]
+                })
+                return response
+
         give_permissions(rules_file)
         tags = host_tags.get(payload.get('agent_tag'))
         #service_tuple = ((payload.get('service'), None, threshold_values), [tags], [payload.get('host')])
         service_tuple = ([payload.get('host')], payload.get('service'), None, threshold_values)
-        save_service(payload.get('service'), service_tuple, snmp_port_tuple)
+        save_service(payload.get('host'), payload.get('service'), service_tuple, serv_params, ping_levels, snmp_port_tuple)
     else:
         response.update({
             "success": 0,
@@ -272,6 +297,12 @@ def sync():
 
     nocout_create_sync_snapshot()
     nocout_sites = nocout_distributed_sites()
+    if len(nocout_sites) == 1:
+        response.update({
+            "success": 0,
+            "message": "No slave multisites present"
+        })
+        return response
 
     for site, attrs in nocout_sites.items():
         if attrs.get("replication") == "slave":
@@ -397,15 +428,30 @@ def save_host(file_path):
     return True
 
 
-def save_service(service_name, service_tuple, snmp_port_tuple):
+def save_service(host, service_name, service_tuple, serv_params, ping_levels, snmp_port_tuple):
+    conf = None
     try:
         with open(rules_file, 'a') as f:
-            f.write("\nchecks += [\n")
-            f.write(" " + pprint.pformat(service_tuple) + "\n")
-            f.write("]\n")
-            f.write("\nsnmp_ports += [\n")
-            f.write(" " + pprint.pformat(snmp_port_tuple) + "\n")
-            f.write("]\n")
+            if service_tuple[3]:
+                f.write("\nchecks += [\n")
+                f.write(" " + pprint.pformat(service_tuple) + "\n")
+                f.write("]\n")
+            if snmp_port_tuple:
+                f.write("\nsnmp_ports += [\n")
+                f.write(" " + pprint.pformat(snmp_port_tuple) + "\n")
+                f.write("]\n\n")
+            if serv_params:
+                for param, val in serv_params.items():
+                    f.write('extra_service_conf["' + param + '"] = [\n')
+                    conf = (val, host, service_name)
+                    f.write(pprint.pformat(conf) + "\n")
+                    f.write("]\n\n")
+            if ping_levels:
+                conf = None
+                f.write("ping_levels += [\n")
+                conf = ({'loss': ping_levels.get('pl'), 'rta': ping_levels.get('rta')})
+                f.write(pprint.pformat(conf) + ",\n] + ping_levels")
+                f.write("\n\n")
     except OSError, e:
         raise OSError(e)
 
