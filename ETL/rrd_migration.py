@@ -154,21 +154,29 @@ def get_threshold(perf_data):
 
     #if len(perf_data) == 1:
      #   return threshold_values
-
     for param in perf_data.split(" "):
-        if ';' in param.split("=")[1]:
-            threshold_values[param.split("=")[0]] = {
-                "war": re.sub('[ms]', '', param.split("=")[1].split(";")[1]),
-                "cric": re.sub('[ms]', '', param.split("=")[1].split(";")[2]),
-                "cur": re.sub('[ms]', '', param.split("=")[1].split(";")[0])
-            }
-        else:
-            threshold_values[param.split("=")[0]] = {
-                "war": None,
-                "cric": None,
-                "cur": re.sub('[ms]', '', param.split("=")[1].strip("\n"))
-            }
-    return threshold_values
+	param = param.strip("['\n', ' ']")
+	if param.partition('=')[2]:
+        	if ';' in param.split("=")[1]:
+            		threshold_values[param.split("=")[0]] = {
+                	"war": re.sub('[ms]', '', param.split("=")[1].split(";")[1]),
+                	"cric": re.sub('[ms]', '', param.split("=")[1].split(";")[2]),
+                	"cur": re.sub('[ms]', '', param.split("=")[1].split(";")[0])
+            		}
+        	else:
+            		threshold_values[param.split("=")[0]] = {
+                	"war": None,
+                	"cric": None,
+                	"cur": re.sub('[ms]', '', param.split("=")[1].strip("\n"))
+            		}
+	else:
+		threshold_values[param.split("=")[0]] = {
+			"war": None,
+			"cric": None,
+			"cur": None
+                        }
+
+       return threshold_values
 
 
 def pivot_timestamp(timestamp):

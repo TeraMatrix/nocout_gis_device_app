@@ -73,6 +73,8 @@ def build_data(doc):
     machine_name = get_machine_name()
     local_time_epoch = get_epoch_time(doc.get('local_timestamp'))
     for ds in doc.get('ds').iterkeys():
+	if ds == 'rtmin' or ds == 'rtmax':
+		continue
         for entry in doc.get('ds').get(ds).get('data'):
             check_time_epoch = get_epoch_time(entry.get('time'))
             t = (
