@@ -11,14 +11,22 @@ def check_radwin_rssi(item,params,info):
 			state = 1
 		else:
 			state =0
+		infotext = "Device received signal strength indication is %s " % rssi
+	except ValueError:
+		state = 0 
+		infotext = "type mismatch value"
+		rssi = None
+		return (state,infotext,[("radwin_rssi",rssi)])
 	except:
-		print radwin_ssi_parameters
-	infotext = "Device received signal strength indication is %s " % rssi
+		infotext = "unknown value"
+		state = 3
+		rssi = None
+		return (state,infotext,["radwin_rssi",rssi])	
         return (state,  infotext, [("radwin_rssi",rssi,warn,crit)])
 
 check_info["radwin_rssi"] = {
 	'check_function'        :  check_radwin_rssi,
-	'service_description'   :  'Radwin_rssi',
+	'service_description'   :  'radwin_rssi',
 	'has_perfdata'          :  True,
 }
 

@@ -2,9 +2,13 @@
 
 def check_radwin_producttype_invent(item, _no_params, info):
         try:
-		product_type  = info[0][0]
-        	state = 0
-        	infotext = "%s" % product_type
+		if info[0][0]:
+			product_type  = info[0][0]
+        		state = 0
+        		infotext = "%s" % product_type
+		else:
+			state = 0
+			infotext = "unknown value"
 	except:
 		state = 3
 		infotext = "Unknown value"

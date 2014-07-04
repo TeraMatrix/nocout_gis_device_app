@@ -24,7 +24,12 @@ def check_radwin_autonegotiation_status(item,_no_params,info):
 		state = 0
 	except ValueError:
 		state = 0
+		infotext = "type mismatch value"
+		return (state,infotext,[''])
+	except:
+		state = 3
 		infotext = "unknown value"
+		return (state,infotext,[''])
 	return (state,infotext,port_status_list)
 
 check_info["radwin_autonegotiation_status"] = {

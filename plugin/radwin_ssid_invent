@@ -2,12 +2,15 @@
 
 def check_radwin_ssid_invent(item, _no_params, info):
         try:
-		ssid  = info[0][0]
-        	state = 0
-        	infotext = "%s" % ssid
+		if info[0][0]:
+			ssid  = info[0][0]
+        		state = 0
+        		infotext = "%s" % ssid
 	except:
 		state = 3
 		infotext = "Unknown value"
+		ssid = None
+		return (state,infotext)
         return (state,  infotext)
 
 check_info["radwin_ssid_invent"] = {

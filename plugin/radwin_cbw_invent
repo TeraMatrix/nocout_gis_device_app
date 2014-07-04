@@ -2,13 +2,19 @@
 
 def check_radwin_cbw_invent(item, _no_params, info):	
 	try:
-		cbw  = int(info[0][0])
+		if info[0][0]:
+			cbw  = int(info[0][0])
+			state = 0
+			cbw = cbw/1000
+			infotext = "%d MHZ" % cbw
+	except ValueError:
 		state = 0
-		cbw = cbw/1000
-		infotext = "%d MHZ" % cbw
+		infotext = "type mismatch value"
+		return (state,infotext)
 	except:
 		state = 3
 		infotext = "Unkown value or snmp time out"
+		return (state,infotext)
 	return (state,  infotext)
 
 check_info["radwin_cbw_invent"] = {

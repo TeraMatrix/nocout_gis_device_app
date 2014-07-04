@@ -2,17 +2,25 @@
 
 def check_radwin_uas(item, _no_params, info):
         try:
-		uas  = int(info[0][0])
-        	state = 0
-        	infotext = "Device uas is %d " % uas
+		if info[0][0]:
+			uas  = int(info[0][0])
+        		state = 0
+        		infotext = "Device uas is %d " % uas
+	except ValueError:
+		state = 0
+		infotext = " type mismatch on value"
+		uas = None
+		return (state,infotext,[("uas",uas)])
 	except:
 		state = 3
-		infotext = " Snmp timeout for device"
+		infotext = "unknown value"
+		uas = None
+		return (state,infotext,[("uas",uas)])
         return (state,  infotext,[("Uas",uas)])
 
 check_info["radwin_uas"] = {
 	'check_function'        :  check_radwin_uas,
-	'service_description'   :  'Radwin_unavilable_seconds',
+	'service_description'   :  'radwin_unavilable_seconds',
 	'has_perfdata'		:	True,
 }
 

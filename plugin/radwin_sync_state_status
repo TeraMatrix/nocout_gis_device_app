@@ -1,0 +1,40 @@
+#!/usr/bin/python
+def check_radwin_sync_state_status(item,_no_params,info):
+        try:
+		if info[0][0]:
+                	sync_state  = int(info[0][0])
+                	if sync_state == 1:
+                       		sync_text = "notSupported"
+                	elif sync_state == 2:
+                        	sync_text = "independentUnit"
+                	elif sync_state == 3:
+                        	sync_text= "hubSyncMaster"
+                	elif sync_state == 4:
+                        	sync_text = "hubSyncClientContinueTx"
+                	elif sync_state == 5:
+                        	sync_text= "hubSyncClientDisableTx"
+                	else:        
+				sync_text ="unknown value"
+                	state = 0
+                	infotext = "%s" % (sync_text)
+	except ValueError:
+		state = 0
+		infotext = "type mismatch value"
+		sync_text  = None
+		return (state,infotext,[("site_sync_state",sync_text)])
+        except:
+                infotext = "unknown value"
+                state = 3
+		sync_text = None
+		return (state,infotext,[("site_sync_state",sync_text)])
+		
+        return (state,  infotext, [("site_sync_state",sync_text)])
+
+check_info["radwin_sync_state_status"] = {
+        'check_function'        :  check_radwin_sync_state_status,
+        'service_description'   :  'radwin_sync_state_status',
+        'has_perfdata'          :  True,
+}
+
+snmp_info["radwin_sync_state_status"] = ( ".1.3.6.1.4.1.4458.1000.1.5.40", [ "2.0" ] )
+

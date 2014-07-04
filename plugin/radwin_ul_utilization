@@ -11,14 +11,20 @@ def check_radwin_ul_utilization(item, _no_params, info):
                         if_name = info[index][0]
                         if if_name == None:
                                 if_name = "unknown interface name"
+			if ' ' in if_name:
+				if_name = str.replace(if_name,' ','_')
 			status_list.append((if_name,link_in_octets))
                 state = 0
-                for name,in_octets,in status_list:
+                for name,in_octets in status_list:
                         infotext += "[%s] ul_utilization:%s" %(name,in_octets)
         except ValueError:
                 state = 0
                 infotext = "interface utilization type not correct"
-                return (state,infotext,[])
+                return (state,infotext,[''])
+	except:
+		state = 3
+		infotext = "Unkown value"
+		return (state,infotext,[''])
         return (state,  infotext, status_list)
 
 check_info["radwin_ul_utilization"] = {

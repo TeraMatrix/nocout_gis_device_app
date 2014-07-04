@@ -11,8 +11,13 @@ def check_radwin_service_throughput(item, _no_params, info):
 			infotext = "Device service_throughput is %d " % service_throughput
 	except ValueError:
 		state = 0
-		infotext = "Unknown value"
-		service_throughput = "Unknown value"	
+		infotext = "type mismatch value"
+		service_throughput = None
+		return (state,infotext,[("Service_throughput",service_throughput)])
+	except:
+		state = 3
+		infotext = "unknown value"
+		service_throughput = None	
 	return (state,  infotext,[("Service_throughput",service_throughput)])
 
 check_info["radwin_service_throughput"] = {

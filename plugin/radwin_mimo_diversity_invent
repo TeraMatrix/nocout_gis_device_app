@@ -5,13 +5,22 @@ def check_radwin_mimo_diversity_invent(item, _no_params, info):
 		transmission_type  = int(info[0][0])
 		if transmission_type == 1:
 			type_trans = "Mimo"
+			state = 0
 		elif transmission_type == 2:
 			type_trans = "Diversity"
+			state = 0
+		else:
+			type_trans = "unknown value"
+			state = 0 
+        	infotext = "%s" % type_trans
+	except ValueError:
 		state = 0
-        	infotext = "%s" % str(type_trans)
+                infotext = "type mismatch value"
+		return(state,infotext)
 	except:
 		state = 3
-		infotext = "Unkown output"
+		infotext = "Unknown Value"
+		return(state,infotext)
         return (state,  infotext)
 
 check_info["radwin_mimo_diversity_invent"] = {

@@ -2,12 +2,14 @@
 
 def check_radwin_odu_sn_invent(item, _no_params, info):
 	try:
-		odu_sn  = info[0][0]
-		state = 0
-		infotext = "%s" % odu_sn
+		if info[0][0]:
+			odu_sn  = info[0][0]
+			state = 0
+			infotext = "%s" % odu_sn
 	except:
 		state = 3
 		infotext = "Unkown value"
+		return (state,infotext)
         return (state,  infotext)
 
 check_info["radwin_odu_sn_invent"] = {
