@@ -1,4 +1,21 @@
 #!/usr/bin/python
+
+"""
+Master slave sync state Poller script.
+
+Poller script determines the sync state of slave odu with master.
+poller script takes the snmp value of OID .1.3.6.1.4.1.4458.1000.1.5.40.2.0 from snmp agent of device at specific interval.
+Master slave sync state information is sent to device application 
+
+"""
+####################################################################
+# Function: check_radwin_sync_state_status
+#
+# Parameters : info (SNMP output of OID) _no_params(currently no params supported)
+#
+# Ouptut : service state ,plugin output and performance_data
+####################################################################
+
 def check_radwin_sync_state_status(item,_no_params,info):
         try:
 		if info[0][0]:
@@ -36,5 +53,8 @@ check_info["radwin_sync_state_status"] = {
         'has_perfdata'          :  True,
 }
 
+####################################################################
+#	SNMP OID
+####################################################################
 snmp_info["radwin_sync_state_status"] = ( ".1.3.6.1.4.1.4458.1000.1.5.40", [ "2.0" ] )
 

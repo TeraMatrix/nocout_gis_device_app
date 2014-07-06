@@ -1,5 +1,19 @@
 #!/usr/bin/python
+"""
+Radwin ODU serial number type Poller script.
 
+Poller script determines the radwin product type.
+poller script takes the snmp value of OID .1.3.6.1.4.1.4458.1000.1.1.29 from snmp agent of device at specific interval.
+Radwin ODU serial number information is sent to device application 
+
+"""
+#####################################################################
+# Function : check_radwin_odu_sn_invent
+#
+# Parameters: info (SNMP output ) _no_params (NO params)
+#
+# Output: service state and plugin output
+####################################################################
 def check_radwin_odu_sn_invent(item, _no_params, info):
 	try:
 		if info[0][0]:
@@ -17,5 +31,7 @@ check_info["radwin_odu_sn_invent"] = {
     'service_description'   :  'radwin_odu_sn_invent',
 }
 
+####################################################################
+#		SNMP OID
+#####################################################################
 snmp_info["radwin_odu_sn_invent"] = ( ".1.3.6.1.4.1.4458.1000.1", [ "1.29" ] )
-#snmp_info["radwin_mimo_diversity"] = ( ".1.3.6.1.4.1.4458.1000.1", [ "5.8" ] )

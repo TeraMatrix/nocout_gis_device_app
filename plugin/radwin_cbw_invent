@@ -1,6 +1,25 @@
 #!/usr/bin/python
+"""
+Channel Bandwidth Poller script.
+
+This is part of device application. 
+Poller script determines the channel bandwidth in KHZ.
+poller script takes the snmp value of OID .1.3.6.1.4.1.4458.1000.1.5.24 from snmp agent of device at specific interval.
+Channel bandwidth information is sent to device application 
+
+"""
+######################################################################
+# Function : check_radwin_cbw_invent
+#
+# Parameters: info (SNMP device) _no_params (No parameters)
+#
+# Output: service state,plugin output
+#########################################################################
 
 def check_radwin_cbw_invent(item, _no_params, info):	
+	"""
+		Main function for calculating the radwin specific devices's link channel bandwidth.
+	"""
 	try:
 		if info[0][0]:
 			cbw  = int(info[0][0])
@@ -22,5 +41,9 @@ check_info["radwin_cbw_invent"] = {
     'service_description'   :  'radwin_cbw_invent',
 }
 
+############################################################################
+#SNMP OID of the Channel Bandwidth of channel
+##############################################################################
+
+
 snmp_info["radwin_cbw_invent"] = ( ".1.3.6.1.4.1.4458.1000.1", [ "5.24" ] )
-#snmp_info["radwin_cbw"] = ( ".1.3.6.1.4.1.4458.1000.1", [ "5.8" ] )

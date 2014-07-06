@@ -1,14 +1,37 @@
 #!/usr/bin/python
+"""
+Link Ethernet Poller script.
+
+This is part of device application. 
+Poller script determines the all ports ethernet status. 
+poller script takes the snmp value of OID .1.3.6.1.2.1.2.2.1.8 from snmp agent of device at specific interval.
+all ports status are sent to device application 
+
+"""
+
 
 def if_statename(st):
+    """
+	utility function for mapping the interget OID value to string status.
+    """
     names = { '1': 'up',      '2': 'down',
               '3': 'testing', '4': 'unknown',
               '5': 'dormant', '6': 'notPresent',
               '7': 'lowerLayerDown' }
     return names.get(st)
 
+#####################################################################################
+#Function : check_radwin_link_ethernet_status
+#
+#Parameters: info (SNMP output ) _no_params ( No Parameters)
+#
+#Output: plugin output ,service state,performance data
+#####################################################################################
 
 def check_radwin_link_ethernet_status(item,_no_params,info):
+	"""
+		Main function calculates the all ethernet ports status corrosponding to OID and send it to device application.
+	"""
 	try:
 		if not info[0]:
 			return (3,"No response from device")
@@ -46,4 +69,8 @@ check_info["radwin_link_ethernet_status"] = {
         'has_perfdata'          :  True,
 }
 
+#####################################################################
+#snmp OID corrosponding to ports ethernet status.
+######################################################################
+	
 snmp_info["radwin_link_ethernet_status"] = ( ".1.3.6.1.2.1.2.2.1", [ "2","8" ] )

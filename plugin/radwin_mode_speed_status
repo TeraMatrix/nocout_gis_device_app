@@ -1,5 +1,23 @@
 #!/usr/bin/python
 
+"""
+Ethernet port speed and port mode type Poller script.
+
+Poller script determines the radwin port speed and port mode.
+poller script takes the snmp value of OID .1.3.6.1.4.1.4458.1000.1.3.2.1.7.1 from snmp agent of device at specific interval.
+Ethernet port speed and port status information is sent to device application 
+
+"""
+
+#######################################################################
+# Function : check_radwin_mode_speed_status
+#
+# Parameters : info(SNMP output) _no_params (No parameters)
+#
+# Output: Plugin output ,service state and performance data
+#####################################################################
+
+
 def port_mode(st):
     names = { '1': 'notConnected',      '10': 'connectedHalfDuplex',
               '11': 'connectedFullDuplex', '15': 'connectedHalfDuplex',
@@ -47,7 +65,9 @@ check_info["radwin_mode_speed_status"] = {
         'service_description'   :  'radwin_mode_speed_status',
         'has_perfdata'          :  True,
 }
-
+#################################################################
+#	SNMP OID
+#################################################################
 snmp_info["radwin_mode_speed_status"] = ( ".1.3.6.1.4.1.4458.1000.1.3.2.1", [ "7.1" ] )
                                                                                          
 

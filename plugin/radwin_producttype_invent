@@ -1,5 +1,19 @@
 #!/usr/bin/python
+"""
+Radwin product type Poller script.
 
+Poller script determines the radwin product type.
+poller script takes the snmp value of OID .1.3.6.1.4.1.4458.1000.1.1.30 from snmp agent of device at specific interval.
+Radwin product type is sent to device application 
+
+"""
+######################################################################
+# Function: check_radwin_producttype_invent
+#
+# Parameters : info(SNMP Output) _no_params(NO parameters)
+#
+# Output:  service state ,plugin output
+#####################################################################
 def check_radwin_producttype_invent(item, _no_params, info):
         try:
 		if info[0][0]:
@@ -19,6 +33,8 @@ check_info["radwin_producttype_invent"] = {
     'service_description'   :  'radwin_producttype_invent',
 }
 
+#######################################################################
+#	SNMP OID
+#######################################################################
 snmp_info["radwin_producttype_invent"] = ( ".1.3.6.1.4.1.4458.1000.1", [ "1.30" ] )
-#snmp_info["radwin_producttype_invent"] = ( ".1.3.6.1.4.1.4458.1000.1", [ "5.8" ] )
 

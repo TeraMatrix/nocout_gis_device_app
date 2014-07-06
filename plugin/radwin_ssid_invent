@@ -1,5 +1,22 @@
 #!/usr/bin/python
 
+"""
+SS ID Poller script.
+
+Poller script determines the SS id.
+poller script takes the snmp value of OID .1.3.6.1.4.1.4458.1000.1.5.3 from snmp agent of device at specific interval.
+SS ID information is sent to device application 
+
+
+"""
+##################################################################
+# Function : check_radwin_ssid_invent
+#
+# Parameters : info (SNMP Output) ,_no_params(currently no available parameters )
+#
+# Output:     service state , plugin ouptut 
+#################################################################
+
 def check_radwin_ssid_invent(item, _no_params, info):
         try:
 		if info[0][0]:
@@ -18,6 +35,8 @@ check_info["radwin_ssid_invent"] = {
     'service_description'   :  'radwin_ssid_invent',
 }
 
+##########################################################################
+#		SNMP OID
+#########################################################################
 snmp_info["radwin_ssid_invent"] = ( ".1.3.6.1.4.1.4458.1000.1", [ "5.3" ] )
-#snmp_info["radwin_mimo_diversity"] = ( ".1.3.6.1.4.1.4458.1000.1", [ "5.8" ] )
 

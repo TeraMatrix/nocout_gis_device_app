@@ -1,5 +1,19 @@
 #!/usr/bin/python
 
+"""
+Radwin device uptime Poller script.
+
+This is part of device application. 
+Poller script determines the total uptime of the radwin device.
+poller script takes the snmp value of OID .1.3.6.1.2.1.1.3.0 from snmp agent of device at specific interval.
+Radwin total uptime is sent to device application 
+
+"""
+#########################################################
+# Function : check_radwin_uptime
+# Parameters : Info (SNMP output) _no_params (currently poller script does not support parameters),item)
+# Output : Service state ,plugin output and performance data output
+#########################################################
 def check_radwin_uptime(item, _no_params, info):
 	try:
 		if info[0][0]:
@@ -33,5 +47,8 @@ check_info["radwin_uptime"] = {
 
 }
 
+"""
+	SNMP OID of the Service radwin_uptime
+"""
 snmp_info["radwin_uptime"] = ( ".1.3.6.1.2.1.1", [ "3.0" ] )
 
