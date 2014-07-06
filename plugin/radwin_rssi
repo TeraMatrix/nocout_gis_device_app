@@ -1,5 +1,22 @@
 #!/usr/bin/python
 
+"""
+RSSI Poller script.
+
+Poller script determines the SS id.
+poller script takes the snmp value of OID .1.3.6.1.4.1.4458.1000.1.5.3 from snmp agent of device at specific interval.
+RSSI information is sent to device application 
+
+"""
+###################################################################
+#  Function : check_radwin_rssi
+#
+#  Parameters: info(SNMP output) ,params(parameters to check the service state) 
+#
+#  Output: service state,plugin output ,performance data
+##################################################################
+
+
 params = (-50,-80)
 def check_radwin_rssi(item,params,info):
 	try:
@@ -11,16 +28,27 @@ def check_radwin_rssi(item,params,info):
 			state = 1
 		else:
 			state =0
+		infotext = "Device received signal strength indication is %s " % rssi
+	except ValueError:
+		state = 0 
+		infotext = "type mismatch value"
+		rssi = None
+		return (state,infotext,[("radwin_rssi",rssi)])
 	except:
-		print radwin_ssi_parameters
-	infotext = "Device received signal strength indication is %s " % rssi
+		infotext = "unknown value"
+		state = 3
+		rssi = None
+		return (state,infotext,["radwin_rssi",rssi])	
         return (state,  infotext, [("radwin_rssi",rssi,warn,crit)])
 
 check_info["radwin_rssi"] = {
 	'check_function'        :  check_radwin_rssi,
-	'service_description'   :  'Radwin_rssi',
+	'service_description'   :  'radwin_rssi',
 	'has_perfdata'          :  True,
 }
 
+#######################################################################
+#	SNMP OID
+#######################################################################
 snmp_info["radwin_rssi"] = ( ".1.3.6.1.4.1.4458.1000.1.6.4.1", [ "1.101" ] )
 #snmp_info["radwin_rssi"] = ( ".1.3.6.1.4.1.4458.1000.1", [ "5.8" ] )
