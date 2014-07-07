@@ -1,4 +1,8 @@
-"""nocout_gis Device App web services to C/U/D a host/service into Nagios
+"""
+nocout.py
+=========
+
+nocout_gis Device App web services to Create/Update/Delete a host/service into Nagios
 monitoring core.
 """
 
@@ -157,7 +161,8 @@ def addservice():
         "serv_params": html.var('serv_params'),
         "cmd_params": html.var('cmd_params'),
         "agent_tag": html.var('agent_tag'),
-        "snmp_port": html.var("snmp_port")
+        "snmp_port": html.var("snmp_port"),
+        "snmp_community": html.var("snmp_community")
     }
     new_host = nocout_find_host(payload.get('host'))
     if not new_host:
@@ -169,11 +174,14 @@ def addservice():
             try:
                 cmd_params = json.loads(payload.get('cmd_params'))
                 for ds, thresholds in cmd_params.items():
-                    threshold_items[ds] = ()
-                    threshold_items[ds] += (int(thresholds.get('warning')),)
-                    threshold_items[ds] += (int(thresholds.get('critical')),)
+                    if ds.strip().lower() == 'packets':
+                        threshold_items[ds] = thresholds
+                    else:
+                        threshold_items[ds] = ()
+                        threshold_items[ds] += (int(thresholds.get('warning')),)
+                        threshold_items[ds] += (int(thresholds.get('critical')),)
 
-                if payload.get('service').lower() == 'ping':
+                if payload.get('service').strip().lower() == 'ping':
                     ping_levels = threshold_items
                 else:
                     for k, v in threshold_items.items():
@@ -204,11 +212,23 @@ def addservice():
                 })
                 return response
 
+        snmp_community = None
+        if payload.get('snmp_community'):
+            snmp_community = (payload.get('snmp_community'), [payload.get('host')])
+
         give_permissions(rules_file)
         tags = host_tags.get(payload.get('agent_tag'))
         #service_tuple = ((payload.get('service'), None, threshold_values), [tags], [payload.get('host')])
         service_tuple = ([payload.get('host')], payload.get('service'), None, threshold_values)
-        save_service(payload.get('host'), payload.get('service'), service_tuple, serv_params, ping_levels, snmp_port_tuple)
+        save_service(
+            payload.get('host'),
+            payload.get('service'),
+            service_tuple,
+            serv_params,
+            ping_levels,
+            snmp_port_tuple,
+            snmp_community
+        )
     else:
         response.update({
             "success": 0,
@@ -428,7 +448,7 @@ def save_host(file_path):
     return True
 
 
-def save_service(host, service_name, service_tuple, serv_params, ping_levels, snmp_port_tuple):
+def save_service(host, service_name, service_tuple, serv_params, ping_levels, snmp_port_tuple, snmp_community):
     conf = None
     try:
         with open(rules_file, 'a') as f:
@@ -442,15 +462,23 @@ def save_service(host, service_name, service_tuple, serv_params, ping_levels, sn
                 f.write("]\n\n")
             if serv_params:
                 for param, val in serv_params.items():
-                    f.write('extra_service_conf["' + param + '"] = [\n')
+                    f.write('extra_service_conf["' + param + '"] += [\n')
                     conf = (val, host, service_name)
                     f.write(pprint.pformat(conf) + "\n")
                     f.write("]\n\n")
             if ping_levels:
                 conf = None
-                f.write("ping_levels += [\n")
-                conf = ({'loss': ping_levels.get('pl'), 'rta': ping_levels.get('rta')})
-                f.write(pprint.pformat(conf) + ",\n] + ping_levels")
+                f.write("ping_levels += [\n(")
+                conf = ({
+                    'loss': ping_levels.get('pl', (80.0, 100.0)),
+                    'rta': ping_levels.get('rta', (3000.0, 5000.0)),
+                    'packets': ping_levels.get('packets', 20)
+                })
+                f.write(pprint.pformat(conf) + "),\n] + ping_levels")
+                f.write("\n\n")
+            if snmp_community:
+                f.write("snmp_communities += [\n")
+                f.write(pprint.pformat(snmp_community) + ",\n]")
                 f.write("\n\n")
     except OSError, e:
         raise OSError(e)
