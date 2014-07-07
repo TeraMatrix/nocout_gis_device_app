@@ -1,6 +1,16 @@
+"""
+events_rrd_migration.py
+=======================
+
+Script to import service events data from Nagios rrdtool into
+Teramatrix Pollers.
+"""
+
+
 import os,json
 from datetime import datetime, timedelta
 import rrd_migration,rrd_main,mysql_functions,mongo_functions
+from configparser import parse_config_obj
 				
 
 def get_latest_event_entry(db_type=None, db=None, site=None,table_name=None):
@@ -28,7 +38,7 @@ def get_latest_event_entry(db_type=None, db=None, site=None,table_name=None):
 	return time
 
 
-def extract_nagios_events_live():
+def extract_nagios_events_live(mongo_host, mongo_db, mongo_port):
 	db = None
 	perf_data  = None
         file_path = os.path.dirname(os.path.abspath(__file__))
@@ -39,7 +49,11 @@ def extract_nagios_events_live():
         else:
                 site = path[path.index('sites')+1]
 	
-        db = mongo_functions.mongo_db_conn(site,"nocout")
+        db = rrd_migration.mongo_conn(
+		host=mongo_host,
+		port=mongo_port,
+		db_name=mongo_db
+	)
 	utc_time = datetime(1970, 1,1,5,30)
 	#start_epoch = get_latest_event_entry(db_type = 'mongodb',db=db)
 	#if start_epoch == None:
@@ -161,4 +175,10 @@ def extract_nagios_events_live():
 """	
 		
 if __name__ == '__main__':
-    extract_nagios_events_live()
+    configs = parse_config_obj()
+    for section, options in configs.items():
+	extract_nagios_events_live(
+			mongo_host=options.get('host'),
+			mongo_db=options.get('nosql_db'),
+			mongo_port=int(options.get('port'))
+	)

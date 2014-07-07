@@ -12,7 +12,7 @@ class MKGeneralException(Exception):
         return self.reason
 
 
-def get_host_services_name(site_name=None):
+def get_host_services_name(site_name=None, mongo_host=None, mongo_db=None, mongo_port=None):
         try:
             query = "GET hosts\nColumns: host_name\nOutputFormat: json\n"
                 
@@ -21,7 +21,15 @@ def get_host_services_name(site_name=None):
                 modified_query = "GET hosts\nColumns: host_services host_address\n" +\
                     "Filter: host_name = %s\nOutputFormat: json\n" % (host_name[0])
                 output= json.loads(get_from_socket(site_name, modified_query))
-                rrd_migration.rrd_migration_main(site_name, host_name[0], output[0],output[0][1])
+                rrd_migration.rrd_migration_main(
+                    site_name,
+                    host_name[0],
+                    output[0],
+                    output[0][1],
+                    mongo_host,
+                    mongo_db,
+                    mongo_port
+                )
         except SyntaxError, e:
             raise MKGeneralException(("Can not get performance data: %s") % (e))
         except socket.error, msg:
@@ -43,5 +51,10 @@ if __name__ == '__main__':
     configs = parse_config_obj()
     for section, options in configs.items():
         site = options.get('site')
-    get_host_services_name(site_name=site)
+        get_host_services_name(
+            site_name=site,
+            mongo_host=options.get('host'),
+            mongo_db=options.get('nosql_db'),
+            mongo_port=options.get('port')
+        )
     
