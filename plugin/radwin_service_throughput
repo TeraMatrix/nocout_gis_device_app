@@ -1,11 +1,11 @@
 #!/usr/bin/python
 
 """
-SS ID Poller script.
+Radwin service throughput Poller script.
 
-Poller script determines the SS id.
+Poller script determines the throughput of port.
 poller script takes the snmp value of OID .1.3.6.1.4.1.4458.1000.2.2.14.0 from snmp agent of device at specific interval.
-SS ID information is sent to device application 
+port service throughput information is sent to device application 
 
 
 """
@@ -20,6 +20,32 @@ SS ID information is sent to device application
 
 
 def check_radwin_service_throughput(item, _no_params, info):
+	"""
+                check_radwin_service_throughput function calculates the service throughput of port
+
+                Args:
+                        item (str) Specific item on SNMP output on which we want to filter results
+                
+                Kwargs:
+                        params (tuple) Check parameters for critical and warning state of service ._no_params in this case.
+
+                Returns:
+                        state (int) :
+                                        0 : OK
+                                        1 : Warning
+                                        2: Critical
+					3: unknown
+                        infotext(string):
+                                        plugin output
+                                        Example : Device service_throughput is 230000
+
+                        performance_data  (list):
+                                        performance data
+                                        Example: Service_throughput=230000;;;;
+                        Raises:
+                                ValueError ,Exception
+	"""
+
 	try:
 		service_throughput  = int(info[0][0])
 		if service_throughput == 0 or service_throughput < -1:

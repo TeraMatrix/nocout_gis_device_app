@@ -20,8 +20,28 @@ Link distance informatio is sent to device application
 
 def check_radwin_link_distance_invent(item, _no_params, info):
 	"""
-		main function for calculating the link distance , -1 distance shows the no link between BS.
+                check_radwin_link_distance_invent function calculates the link distance between BS.
+
+                Args:
+                        item (str) Specific item on SNMP output on which we want to filter results
+                
+                Kwargs:
+                        params (tuple) Check parameters for critical and warning state of service
+
+                Returns:
+                        state (int) :
+                                        0 : OK
+                                        1 : Warning
+                                        2: Critical
+					3: unknown
+                        infotext(string):
+                                        plugin output
+                                        Example : Ok-2400
+
+                        Raises:
+                                ValueError ,Exception
 	"""
+	
 	try:
 		link_distance  = int(info[0][0])
 		if link_distance  == -1:

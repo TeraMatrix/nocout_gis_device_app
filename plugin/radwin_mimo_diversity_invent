@@ -1,11 +1,11 @@
 #!/usr/bin/python
 
 """
-Ethernet port speed and port mode type Poller script.
+transmission type Poller script.
 
-Poller script determines the radwin port speed and port mode.
+Poller script determines the tranmission type whether it is mimo or diversity.
 poller script takes the snmp value of OID .1.3.6.1.4.1.4458.1000.1.5.58.0 from snmp agent of device at specific interval.
-Ethernet port speed and port status information is sent to device application 
+Trasmission type information is sent to device application 
 
 """
 ############################################################################
@@ -18,6 +18,28 @@ Ethernet port speed and port status information is sent to device application
 
 
 def check_radwin_mimo_diversity_invent(item, _no_params, info):
+	"""
+                check_radwin_mimo_diversity_invent function calculates the trasnmission type whether it is mimo or diversity.
+
+                Args:
+                        item (str) Specific item on SNMP output on which we want to filter results
+                
+                Kwargs:
+                        params (tuple) Check parameters for critical and warning state of service
+
+                Returns:
+                        state (int) :
+                                        0 : OK
+                                        1 : Warning
+                                        2: Critical
+					3: unknown
+                        infotext(string):
+                                        plugin output
+                                        Example : Mimo
+                        Raises:
+                                ValueError ,Exception
+	"""
+
         try:
 		transmission_type  = int(info[0][0])
 		if transmission_type == 1:

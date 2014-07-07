@@ -18,8 +18,27 @@ Channel bandwidth information is sent to device application
 
 def check_radwin_cbw_invent(item, _no_params, info):	
 	"""
-		Main function for calculating the radwin specific devices's link channel bandwidth.
+                check_radwin_cbw_invent function calculates current channel bandwidth 
+
+                Args:
+                        item (str) Specific item on SNMP output on which we want to filter results
+                
+                Kwargs:
+                        params (tuple) Check parameters for critical and warning state of service
+
+                Returns:
+                        state (int) :
+                                        0 : OK
+                                        1 : Warning
+                                        2: Critical
+					3: unknown
+                        infotext(string):
+                                        plugin output
+                                        Example : OK - 20 MHZ
+                        Raises:
+                                ValueError ,Exception
 	"""
+
 	try:
 		if info[0][0]:
 			cbw  = int(info[0][0])

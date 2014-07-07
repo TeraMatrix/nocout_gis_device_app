@@ -31,6 +31,33 @@ def port_speed(st):
     return names.get(st)
 
 def check_radwin_mode_speed_status(item,_no_params,info):
+	"""
+                check_radwin_mode_speed_status function calculates the port speed and port status
+
+                Args:
+                        item (str) Specific item on SNMP output on which we want to filter results
+                
+                Kwargs:
+                        params (tuple) Check parameters for critical and warning state of service
+
+                Returns:
+                        state (int) :
+                                        0 : OK
+                                        1 : Warning
+                                        2: Critical
+					3: unknown
+                        infotext(string):
+                                        plugin output
+                                        Example : [port port_1] FullDuplex 100Mbps 
+
+                        performance_data  (list):
+                                        performance data
+                                        Example: port_1 = FullDuplex;100Mbps;;;
+                        Raises:
+                                ValueError ,Exception
+	"""
+
+
         try:
                 if not info[0]:
                         return (3,"No response from device")

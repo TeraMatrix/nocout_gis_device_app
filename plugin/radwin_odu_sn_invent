@@ -15,6 +15,28 @@ Radwin ODU serial number information is sent to device application
 # Output: service state and plugin output
 ####################################################################
 def check_radwin_odu_sn_invent(item, _no_params, info):
+	"""
+                check_radwin_odu_sn_invent function calculates the device odu serial number
+
+                Args:
+                        item (str) Specific item on SNMP output on which we want to filter results
+                
+                Kwargs:
+                        params (tuple) Check parameters for critical and warning state of service
+
+                Returns:
+                        state (int) :
+                                        0 : OK
+                                        1 : Warning
+                                        2: Critical
+					3: unknown
+                        infotext(string):
+                                        plugin output
+                                        Example : BIN500I500000291
+                        Raises:
+                                Exception
+	"""
+
 	try:
 		if info[0][0]:
 			odu_sn  = info[0][0]
@@ -22,7 +44,7 @@ def check_radwin_odu_sn_invent(item, _no_params, info):
 			infotext = "%s" % odu_sn
 	except:
 		state = 3
-		infotext = "Unkown value"
+		infotext = "Unknown value"
 		return (state,infotext)
         return (state,  infotext)
 
