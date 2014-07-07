@@ -1,3 +1,12 @@
+"""
+rrd_migration.py
+================
+
+Script to import services and network performance data from Nagios rrdtool into
+Teramatrix Pollers.
+"""
+
+
 import os
 import demjson
 import re
@@ -8,7 +17,7 @@ import pymongo
 import rrd_main
 import mongo_functions
 
-def build_export(site,host,ip):
+def build_export(site, host, ip, mongo_host, mongo_db, mongo_port):
 	_folder = '/opt/omd/sites/%s/var/pnp4nagios/perfdata/%s/' % (site,host)
 	xml_file_list = []
 	#tmp_service =service
@@ -28,7 +37,11 @@ def build_export(site,host,ip):
 	}
     	perf_db = None
 	threshold_values = {}
-	db = mongo_functions.mongo_db_conn(site,"nocout")
+	db = mongo_conn(
+	    host=mongo_host,
+	    port=int(mongo_port),
+	    db_name=mongo_db
+	)
 	for perf_file in os.listdir(_folder):
 		if perf_file.endswith(".xml"):
 			xml_file_list.append(perf_file)		
@@ -176,7 +189,7 @@ def get_threshold(perf_data):
 			"cur": None
                         }
 
-       return threshold_values
+    return threshold_values
 
 
 def pivot_timestamp(timestamp):
@@ -244,8 +257,8 @@ def insert_data(data_dict):
         return "Data couldn't be inserted into Mongodb"
 
 
-def rrd_migration_main(site,host,services,ip):
-	build_export(site,host,ip)
+def rrd_migration_main(site,host,services,ip, mongo_host, mongo_db, mongo_port):
+	build_export(site, host, ip, mongo_host, mongo_db, mongo_port)
         #for service in services[0]:
 
 """if __name__ == '__main__':

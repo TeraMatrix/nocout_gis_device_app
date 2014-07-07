@@ -1,3 +1,12 @@
+"""
+network_mongo_migration.py
+==========================
+
+Script to bulk insert data from Teramatrix Pollers into
+central mysql db, for ping network services.
+"""
+
+
 import os
 import MySQLdb
 import pymongo
@@ -14,7 +23,12 @@ def main(**configs):
     docs = []
     db = mysql_conn(configs=configs)
     # Get the time for latest entry in mysql
-    start_time = get_latest_entry(db_type='mysql', db=db, site=configs.get('site'),table_name=configs.get('table_name'))
+    start_time = get_latest_entry(
+		    db_type='mysql', 
+		    db=db,
+		    site=configs.get('site'),
+		    table_name=configs.get('table_name')
+    )
 
     end_time = datetime.now()
 
@@ -128,8 +142,12 @@ def get_epoch_time(datetime_obj):
 
 def mysql_conn(db=None, **kwargs):
     try:
-        db = MySQLdb.connect(host=kwargs.get('configs').get('host'), user=kwargs.get('configs').get('user'),
-            passwd=kwargs.get('configs').get('sql_passwd'), db=kwargs.get('configs').get('sql_db'))
+        db = MySQLdb.connect(
+                host=kwargs.get('configs').get('host'),
+                user=kwargs.get('configs').get('user'),
+                passwd=kwargs.get('configs').get('sql_passwd'),
+                db=kwargs.get('configs').get('sql_db')
+        )
     except MySQLdb.Error, e:
         raise MySQLdb.Error, e
 
