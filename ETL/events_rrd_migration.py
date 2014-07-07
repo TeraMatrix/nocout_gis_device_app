@@ -60,14 +60,11 @@ def service_perf_data_live_query(db,site,log_split):
 					data_source = ds,warning_threshold=war,
 					critical_threshold =crit ,check_timestamp = int(log_split[1]),
 					ip_address=host_ip,service_name=log_split[5],site_name=site)
-			print serv_event_dict
                		mongo_functions.mongo_db_insert(db,serv_event_dict,"serv_event")
 	else:
 		query = "GET services\nColumns: service_plugin_output\nFilter: service_description ~ %s\n" %(log_split[5]) 
-		print "inventory alert"
 		perf_data= rrd_main.get_from_socket(site, query)
 		current_value = perf_data.split('- ')[1].strip('\n')
-		print perf_data
 		serv_event_dict=dict(sys_timestamp=int(log_split[1]),device_name=log_split[4],severity=log_split[8],
                                 description=log_split[11],min_value=0,max_value=0,avg_value =0,
 				current_value=current_value,
@@ -98,14 +95,12 @@ def network_perf_data_live_query(db,site,log_split):
 				data_source=ds,warning_threshold=host_war,critical_threshold=host_crit,
 				check_timestamp=int(log_split[1]),
 				ip_address=host_ip,site_name=site,service_name='PING')
-                print host_event_dict
                	mongo_functions.mongo_db_insert(db,host_event_dict,"host_event")
 
 
 
 def extract_nagios_events_live(mongo_host, mongo_db, mongo_port):
 	db = None
-	print mongo_port
 	perf_data  = {}
         file_path = os.path.dirname(os.path.abspath(__file__))
         path = [path for path in file_path.split('/')]
@@ -127,7 +122,6 @@ def extract_nagios_events_live(mongo_host, mongo_db, mongo_port):
 	#if start_epoch == None:
 	start_time = datetime.now() - timedelta(minutes=1)
 	start_epoch = int((start_time - utc_time).total_seconds())
-	print start_epoch
         end_time = datetime.now()
         end_epoch = int((end_time - utc_time).total_seconds())
 	
