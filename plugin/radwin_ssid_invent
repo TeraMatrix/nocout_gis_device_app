@@ -18,6 +18,29 @@ SS ID information is sent to device application
 #################################################################
 
 def check_radwin_ssid_invent(item, _no_params, info):
+	"""
+                check_radwin_ssid_invent function calculates the ssid of device
+
+                Args:
+                        item (str) Specific item on SNMP output on which we want to filter results
+                
+                Kwargs:
+                        params (tuple) Check parameters for critical and warning state of service
+
+                Returns:
+                        state (int) :
+                                        0 : OK
+                                        1 : Warning
+                                        2: Critical
+					3: unknown
+                        infotext(string):
+                                        plugin output
+                                        Example : SELUCREHpondy to ngm 
+
+                        Raises:
+                                Exception
+	"""
+
         try:
 		if info[0][0]:
 			ssid  = info[0][0]

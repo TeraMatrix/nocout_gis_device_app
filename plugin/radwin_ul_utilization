@@ -19,6 +19,33 @@ Total Uplink utilization is sent to device application
 ###################################################
 
 def check_radwin_ul_utilization(item, _no_params, info):
+	"""
+                check_radwin_ul_utilization calculates the port uplink utilization
+
+                Args:
+                        item (str) Specific item on SNMP output on which we want to filter results
+                
+                Kwargs:
+                        params (tuple) Check parameters for critical and warning state of service
+
+                Returns:
+                        state (int) :
+                                        0 : OK
+                                        1 : Warning
+                                        2: Critical
+					3: unknown
+                        infotext(string):
+                                        plugin output
+                                        Example : [port_1] ul_utilization:233333
+
+                        performance_data  (list):
+                                        performance data
+                                        Example: port_1=233333;;;;;
+                        Raises:
+                                ValueError ,Exception
+	"""
+
+
 	try:
 		if not info[0]:
 			return (3,"No response from device")

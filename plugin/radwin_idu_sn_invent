@@ -18,7 +18,26 @@ IDU serial number of IDU is sent to device application
 
 def check_radwin_idu_sn_invent(item, _no_params, info):
 	"""
-		Main function for calculating the IDU serial number 
+                check_radwin_idu_sn_invent function calculates the idu serial number
+
+                Args:
+                        item (str) Specific item on SNMP output on which we want to filter results
+                
+                Kwargs:
+                        params (tuple) Check parameters for critical and warning state of service
+
+                Returns:
+                        state (int) :
+                                        0 : OK
+                                        1 : Warning
+                                        2: Critical
+					3: unknown
+                        infotext(string):
+                                        plugin output
+                                        Example : OK - BB1202020
+
+                        Raises:
+                               Exception
 	"""
 	try:
 		if info[0][0]:

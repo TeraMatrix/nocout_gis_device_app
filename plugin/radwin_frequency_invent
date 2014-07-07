@@ -17,11 +17,33 @@ Device on which Frequency operating is sent to device application
 # Output: service state ,plugin output
 #######################################################################
 
+
+
+
 def check_radwin_frequency_invent(item, _no_params, info):
+        """
+                check_radwin_frequency_invent function calculates the operating frequency
+
+                Args:
+                        item (str) Specific item on SNMP output on which we want to filter results
+                
+                Kwargs:
+                        params (tuple) Check parameters for critical and warning state of service
+
+                Returns:
+                        state (int) :
+                                        0 : OK
+                                        1 : Warning
+                                        2: Critical
+					3: unknown
+                        infotext(string):
+                                        plugin output
+                                        Example : OK - 5835
+
+                        Raises:
+                                ValueError ,Exception
 	"""
-		Main function for calculation of operating frequency of device .Negative frequency is termed as illegal .
-	"""
-        try:
+	try:
 		if info[0][0]:
         		frequency  = int(info[0][0])
 			if frequency  < 0 :

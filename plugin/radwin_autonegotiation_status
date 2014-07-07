@@ -26,8 +26,31 @@ def portstatus(st):
 ################################################################################
 def check_radwin_autonegotiation_status(item,_no_params,info):
 	"""
-		Main function for calculating the ports autonegotation status.
+                check_radwin_autonegotiation_status function calculates the port autonegotiation status.
+
+                Args:
+                        item (str) Specific item on SNMP output on which we want to filter results
+                
+                Kwargs:
+                        params (tuple) Check parameters for critical and warning state of service
+
+                Returns:
+                        state (int) :
+                                        0 : OK
+                                        1 : Warning
+                                        2: Critical
+					3: unknown
+                        infotext(string):
+                                        plugin output
+                                        Example : OK - [port 1]forcefullDuplex100Mbps [port 2]Auto [port 3]Auto
+
+                        performance_data  (list):
+                                        performance data
+                                        Example: 1=forcefullDuplex100Mbps;;;; 2=Auto;;;; 3=Auto;;;;
+                        Raises:
+                                ValueError ,Exception
 	"""
+	
 	try:
 		if not info[0]:
 			return (3, "No output from Device")

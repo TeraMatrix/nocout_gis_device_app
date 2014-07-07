@@ -15,6 +15,28 @@ Radwin product type is sent to device application
 # Output:  service state ,plugin output
 #####################################################################
 def check_radwin_producttype_invent(item, _no_params, info):
+	"""
+                check_radwin_producttype_invent function calculates the producttype of the device
+
+                Args:
+                        item (str) Specific item on SNMP output on which we want to filter results
+                
+                Kwargs:
+                        params (tuple) Check parameters for critical and warning state of service
+
+                Returns:
+                        state (int) :
+                                        0 : OK
+                                        1 : Warning
+                                        2: Critical
+					3: unknown
+                        infotext(string):
+                                        plugin output
+                                        Example : RW-2450-0150
+                        Raises:
+                                Exception
+	"""
+
         try:
 		if info[0][0]:
 			product_type  = info[0][0]

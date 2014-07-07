@@ -17,6 +17,32 @@ Information of unavailable seconds is sent to device application
 #############################################################
 
 def check_radwin_uas(item, _no_params, info):
+	"""
+                check_radwin_uas function calculates the unavaliable seconds
+
+                Args:
+                        item (str) Specific item on SNMP output on which we want to filter results
+                
+                Kwargs:
+                        params (tuple) Check parameters for critical and warning state of service
+
+                Returns:
+                        state (int) :
+                                        0 : OK
+                                        1 : Warning
+                                        2: Critical
+					3: unknown
+                        infotext(string):
+                                        plugin output
+                                        Example : Device uas is 0
+
+                        performance_data  (list):
+                                        performance data
+                                        Example: uas=0;;;;
+                        Raises:
+                                ValueError ,Exception
+	"""
+
         try:
 		if info[0][0]:
 			uas  = int(info[0][0])

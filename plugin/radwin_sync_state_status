@@ -17,7 +17,32 @@ Master slave sync state information is sent to device application
 ####################################################################
 
 def check_radwin_sync_state_status(item,_no_params,info):
-        try:
+        """
+                check_radwin_sync_state_status function calculates the master slave sync state
+
+                Args:
+                        item (str) Specific item on SNMP output on which we want to filter results
+                
+                Kwargs:
+                        params (tuple) Check parameters for critical and warning state of service
+
+                Returns:
+                        state (int) :
+                                        0 : OK
+                                        1 : Warning
+                                        2: Critical
+					3: unknown
+                        infotext(string):
+                                        plugin output
+                                        Example : site sync state is independentUnit
+
+                        performance_data  (list):
+                                        performance data
+                                        Example: site_sync_state=independentUnit;;;;
+                        Raises:
+                                ValueError ,Exception
+	"""
+	try:
 		if info[0][0]:
                 	sync_state  = int(info[0][0])
                 	if sync_state == 1:
@@ -33,7 +58,7 @@ def check_radwin_sync_state_status(item,_no_params,info):
                 	else:        
 				sync_text ="unknown value"
                 	state = 0
-                	infotext = "%s" % (sync_text)
+                	infotext = "site sync state is %s" % (sync_text)
 	except ValueError:
 		state = 0
 		infotext = "type mismatch value"

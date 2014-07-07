@@ -20,8 +20,31 @@ Total Downlink utilization is sent to device application
 
 def check_radwin_dl_utilization(item, _no_params, info):
 	"""
-		Main function for calculating the Downlink utilization
+                check_radwin_dl_utilization function calculates the downlink utilization
+
+                Args:
+                        item (str) Specific item on SNMP output on which we want to filter results
+                
+                Kwargs:
+                        params (tuple) Check parameters for critical and warning state of service
+
+                Returns:
+                        state (int) :
+                                        0 : OK
+                                        1 : Warning
+                                        2: Critical
+					3: unknown
+                        infotext(string):
+                                        plugin output
+                                        Example : OK - [Management_Port_on_Odu] dl_utilization:2994339289
+
+                        performance_data  (list):
+                                        performance data
+                                        Example: Management_Port_on_Odu=2994339289;;;; Radio_Interface=;;;;
+                        Raises:
+                                ValueError ,Exception
 	"""
+
 	try:
 		if not info[0]:
 			return (3,"No response from device")

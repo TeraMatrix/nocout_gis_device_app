@@ -15,6 +15,32 @@ Radwin total uptime is sent to device application
 # Output : Service state ,plugin output and performance data output
 #########################################################
 def check_radwin_uptime(item, _no_params, info):
+	"""
+                check_radwin_uptime function calculates the total uptime
+
+                Args:
+                        item (str) Specific item on SNMP output on which we want to filter results
+                
+                Kwargs:
+                        params (tuple) Check parameters for critical and warning state of service
+
+                Returns:
+                        state (int) :
+                                        0 : OK
+                                        1 : Warning
+                                        2: Critical
+					3: unknown
+                        infotext(string):
+                                        plugin output
+                                        Example : OK - up since Sun Jun 22 06:45:34 2014 (12d 21:06:44)
+
+                        performance_data  (list):
+                                        performance data
+                                        Example: uptime=1112804;;;;
+                        Raises:
+                                ValueError ,Exception
+	"""
+
 	try:
 		if info[0][0]:
 			uptime  = int(info[0][0])
