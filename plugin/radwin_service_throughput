@@ -1,5 +1,24 @@
 #!/usr/bin/python
 
+"""
+SS ID Poller script.
+
+Poller script determines the SS id.
+poller script takes the snmp value of OID .1.3.6.1.4.1.4458.1000.2.2.14.0 from snmp agent of device at specific interval.
+SS ID information is sent to device application 
+
+
+"""
+##############################################################
+# Function : check_radwin_service_throughput
+#
+# Parameters : info (SNMP output), _no_params (scripts params)
+#
+# Output:   service state,plugin output ,peformance data
+###############################################################
+
+
+
 def check_radwin_service_throughput(item, _no_params, info):
 	try:
 		service_throughput  = int(info[0][0])
@@ -11,8 +30,13 @@ def check_radwin_service_throughput(item, _no_params, info):
 			infotext = "Device service_throughput is %d " % service_throughput
 	except ValueError:
 		state = 0
-		infotext = "Unknown value"
-		service_throughput = "Unknown value"	
+		infotext = "type mismatch value"
+		service_throughput = None
+		return (state,infotext,[("Service_throughput",service_throughput)])
+	except:
+		state = 3
+		infotext = "unknown value"
+		service_throughput = None	
 	return (state,  infotext,[("Service_throughput",service_throughput)])
 
 check_info["radwin_service_throughput"] = {
@@ -22,6 +46,7 @@ check_info["radwin_service_throughput"] = {
 	
 }
 
+#################################################################################
+#		SNMP OID
+#################################################################################
 snmp_info["radwin_service_throughput"] = ( ".1.3.6.1.4.1.4458.1000.2.2", [ "14.0" ] )
-#snmp_info["radwin_service_throughput"] = ( ".1.3.6.1.4.1.4458.1000.1", [ "5.8" ] )
-

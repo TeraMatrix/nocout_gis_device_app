@@ -1,21 +1,47 @@
 #!/usr/bin/python
 
+"""
+Unavailable seconds Poller script.
+
+Poller script determines the unavailable seconds.
+poller script takes the snmp value of OID .1.3.6.1.4.1.4458.1000.1.6.1.1.1.1 from snmp agent of device at specific interval.
+Information of unavailable seconds is sent to device application 
+
+"""
+##############################################################
+# Function :  check_radwin_uas
+#  
+# Parameters : info(SNMP output of OID ) _no_params (Currently no params supported )
+#
+# Output  :  service state , Plugin output and performace data
+#############################################################
+
 def check_radwin_uas(item, _no_params, info):
         try:
-		uas  = int(info[0][0])
-        	state = 0
-        	infotext = "Device uas is %d " % uas
+		if info[0][0]:
+			uas  = int(info[0][0])
+        		state = 0
+        		infotext = "Device uas is %d " % uas
+	except ValueError:
+		state = 0
+		infotext = " type mismatch on value"
+		uas = None
+		return (state,infotext,[("uas",uas)])
 	except:
 		state = 3
-		infotext = " Snmp timeout for device"
+		infotext = "unknown value"
+		uas = None
+		return (state,infotext,[("uas",uas)])
         return (state,  infotext,[("Uas",uas)])
 
 check_info["radwin_uas"] = {
 	'check_function'        :  check_radwin_uas,
-	'service_description'   :  'Radwin_unavilable_seconds',
+	'service_description'   :  'radwin_unavilable_seconds',
 	'has_perfdata'		:	True,
 }
 
+##############################################################
+# SNMP OID
+#############################################################
 snmp_info["radwin_uas"] = ( ".1.3.6.1.4.1.4458.1000.1.6.1.1", [ "1.1" ] )
-#snmp_info["radwin_uas"] = ( ".1.3.6.1.4.1.4458.1000.1", [ "5.8" ] )
 
