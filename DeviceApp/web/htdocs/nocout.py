@@ -11,6 +11,7 @@ import requests
 import json
 import pprint
 import os
+import demjson
 
 
 hosts_file = root_dir + "hosts.mk"
@@ -62,17 +63,24 @@ g_service_vars = {
 
 
 def main():
+    response = ''
+    action = ''
     action = html.var('mode')
     host = html.var('device_name')
     #f = (lambda x: x)
     #f(addhost)()
     try:
         # Calling the appropriate function based on action
-        response = globals()[action]()
-    except KeyError, e:
+        #response = globals()[action]()
+        #TO DO:: Call the appropriate modes through a global
+        if action == 'addhost':
+            response = addhost()
+        elif action == 'addservice':
+            response = addservice()
+    except Exception, e:
         response = {
             "success": 0,
-            "message": "No action defined for mode " + action
+            "message": pprint.pformat(e)
         }
 
     html.write(pprint.pformat(response))
@@ -172,7 +180,7 @@ def addservice():
         ping_levels = None
         if payload.get('cmd_params'):
             try:
-                cmd_params = json.loads(payload.get('cmd_params'))
+                cmd_params = demjson.decode(payload.get('cmd_params'))
                 for ds, thresholds in cmd_params.items():
                     if ds.strip().lower() == 'packets':
                         threshold_items[ds] = thresholds
@@ -186,6 +194,7 @@ def addservice():
                 else:
                     for k, v in threshold_items.items():
                         threshold_values = v
+                        html.write(pprint.pformat("Goes Here \n"))
             except TypeError, e:
                 response.update({
                     "success": 0,
@@ -203,7 +212,7 @@ def addservice():
         serv_params = None
         if payload.get('serv_params'):
             try:
-                serv_params = json.loads(payload.get('serv_params'))
+                serv_params = demjson.decode(payload.get('serv_params'))
             except TypeError, e:
                 response.update({
                     "success": 0,
