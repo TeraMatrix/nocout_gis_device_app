@@ -12,6 +12,7 @@ import json
 import pprint
 import os
 import demjson
+import ast
 
 
 hosts_file = root_dir + "hosts.mk"
@@ -77,6 +78,8 @@ def main():
             response = addhost()
         elif action == 'addservice':
             response = addservice()
+	elif action == 'sync':
+	    response = sync()
     except Exception, e:
         response = {
             "success": 0,
@@ -180,7 +183,7 @@ def addservice():
         ping_levels = None
         if payload.get('cmd_params'):
             try:
-                cmd_params = demjson.decode(payload.get('cmd_params'))
+                cmd_params = ast.literal_eval(payload.get('cmd_params'))
                 for ds, thresholds in cmd_params.items():
                     if ds.strip().lower() == 'packets':
                         threshold_items[ds] = thresholds
@@ -194,12 +197,11 @@ def addservice():
                 else:
                     for k, v in threshold_items.items():
                         threshold_values = v
-                        html.write(pprint.pformat("Goes Here \n"))
-            except TypeError, e:
+            except Exception, e:
                 response.update({
                     "success": 0,
                     "message": "Service not added",
-                    "error_message": "cmd_params " + str(e).split(':')[0]
+                    "error_message": "cmd_params " + pprint.pformat(e)
                 })
                 return response
 
@@ -212,12 +214,12 @@ def addservice():
         serv_params = None
         if payload.get('serv_params'):
             try:
-                serv_params = demjson.decode(payload.get('serv_params'))
-            except TypeError, e:
+                serv_params = ast.literal_eval(payload.get('serv_params'))
+            except Exception, e:
                 response.update({
                     "success": 0,
                     "message": "Service not added",
-                    "error_message": "serv_params " + str(e).split(':')[0]
+                    "error_message": "serv_params " + pprint.pformat(e)
                 })
                 return response
 
@@ -326,12 +328,6 @@ def sync():
 
     nocout_create_sync_snapshot()
     nocout_sites = nocout_distributed_sites()
-    if len(nocout_sites) == 1:
-        response.update({
-            "success": 0,
-            "message": "No slave multisites present"
-        })
-        return response
 
     for site, attrs in nocout_sites.items():
         if attrs.get("replication") == "slave":
