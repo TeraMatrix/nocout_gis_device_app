@@ -54,7 +54,10 @@ def build_export(site, host, ip, mongo_host, mongo_db, mongo_port):
 
 		perf_data = root.find("NAGIOS_PERFDATA").text.strip()
 		serv_disc = root.find("NAGIOS_SERVICEDESC").text.strip()
-		data_dict['service'] = serv_disc
+		if serv_disc == '_HOST_':
+			data_dict['service'] = 'ping'
+		else:
+			data_dict['service'] = serv_disc
 		threshold_values = get_threshold(perf_data)
 		for ds in root.findall('DATASOURCE'):
 			params.append(ds.find('NAME').text)
@@ -62,7 +65,7 @@ def build_export(site, host, ip, mongo_host, mongo_db, mongo_port):
 		for path in file_paths:
 			m = -1
 		
-			data_series = do_export(site, path,params[file_paths.index(path)], db, serv_disc)
+			data_series = do_export(site, path,params[file_paths.index(path)], db, data_dict['service'])
 			data_dict.update({
 				"check_time": data_series.get('check_time'),
 				"local_timestamp": data_series.get('local_timestamp'),
