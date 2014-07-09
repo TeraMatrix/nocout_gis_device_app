@@ -94,8 +94,8 @@ def network_perf_data_live_query(db,site,log_split):
                 		description=description,min_value=0,max_value=0,avg_value=0,current_value=host_cur,
 				data_source=ds,warning_threshold=host_war,critical_threshold=host_crit,
 				check_timestamp=int(log_split[1]),
-				ip_address=host_ip,site_name=site,service_name='PING')
-               	mongo_functions.mongo_db_insert(db,host_event_dict,"host_event")
+				ip_address=host_ip,site_name=site,service_name='ping')
+                mongo_functions.mongo_db_insert(db,host_event_dict,"host_event")
 
 
 
