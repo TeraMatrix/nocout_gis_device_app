@@ -223,7 +223,7 @@ def addservice():
                 })
                 return response
             for param, val in serv_params.items():
-                t = (val, host_tags.get(payload.get('agent_tag')), [payload.get('host')], payload.get('service'))
+                t = (val, [host_tags.get(payload.get('agent_tag'))], [payload.get('host')], payload.get('service'))
                 g_service_vars['extra_service_conf'][param].append(t)
                 t = ()
 
@@ -364,7 +364,7 @@ def editservice():
                 })
                 return response
             for param, val in serv_params.items():
-                t = (val, host_tags.get(payload.get('agent_tag')), [payload.get('host')], payload.get('service'))
+                t = (val, [host_tags.get(payload.get('agent_tag'))], [payload.get('host')], payload.get('service'))
                 g_service_vars['extra_service_conf'][param].append(t)
                 t = ()
 
@@ -490,11 +490,9 @@ def delete_host_rules(hostname=None, servicename=None):
         "bulkwalk_hosts": [],
         "extra_host_conf": {},
         "extra_service_conf": {
-            "notification_interval": [],
             "retry_check_interval": [],
             "max_check_attempts": [],
-            "check_period": [],
-            "notification_period": []
+            "normal_check_interval": []
         },
         "static_checks": {},
         "ping_levels": [],
