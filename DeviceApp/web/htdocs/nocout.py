@@ -12,6 +12,7 @@ import json
 import pprint
 import os
 import ast
+from itertools import ifilterfalse
 
 
 hosts_file = root_dir + "hosts.mk"
@@ -504,10 +505,12 @@ def delete_host_rules(hostname=None, servicename=None):
         for check, check_vals in g_service_vars['static_checks'].items():
             g_service_vars['static_checks'][check] = filter(lambda t: hostname not in t[2], check_vals)
     else:
-        g_service_vars['checks'] = filter(lambda t: servicename not in t[1], g_service_vars['checks'])
+        iter_func = ifilterfalse(lambda t: hostname in t[0] and servicename in t[1], g_service_vars['checks'])
+        g_service_vars['checks'] = map(lambda x: x, iter_func)
 
         for serv_param, param_vals in g_service_vars['extra_service_conf'].items():
-            g_service_vars['extra_service_conf'][serv_param] = filter(lambda t: servicename not in t[3], param_vals)
+            iter_func = ifilterfalse(lambda t: hostname in t[2] and servicename in t[3], param_vals)
+            g_service_vars['extra_service_conf'][serv_param] = map(lambda x: x, iter_func)
 
 
 def write_new_host_rules():
