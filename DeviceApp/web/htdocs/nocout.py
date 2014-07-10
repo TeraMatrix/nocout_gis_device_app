@@ -58,11 +58,9 @@ g_service_vars = {
     "bulkwalk_hosts": [],
     "extra_host_conf": {},
     "extra_service_conf": {
-        "notification_interval": [],
         "retry_check_interval": [],
         "max_check_attempts": [],
-        "check_period": [],
-        "notification_period": []
+        "normal_check_interval": []
     },
     "static_checks": {},
     "ping_levels": [],
@@ -273,7 +271,7 @@ def edithost():
         "device_name": html.var('device_name'),
         "message": "Device edited successfully",
         "error_code": None,
-        "error_message": None
+        "error_message": Noneread_comm
     }
     payload = {
         "host": html.var("device_name"),
