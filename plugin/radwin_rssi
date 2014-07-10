@@ -18,6 +18,14 @@ RSSI information is sent to device application
 
 
 params = (-50,-80)
+import logging
+DEBUG = False
+try:
+    logging.basicConfig(filename="/omd/sites/master_UA/log_plugins.log", level=logging.DEBUG)
+    DEBUG = True
+except:
+    pass
+
 def check_radwin_rssi(item,params,info):
 	"""
 		Check_radwin_rssi function calcaulates the received signal strength indication
@@ -30,8 +38,8 @@ def check_radwin_rssi(item,params,info):
 
 		Returns:
 			state (int) :
-					0 : OK
-					1 : Warning
+					0: OK
+					1: Warning
 					2: Critical
 					3: unknown
 			infotext(string):
@@ -44,8 +52,16 @@ def check_radwin_rssi(item,params,info):
 			Raises:
 				ValueError ,Exception
 	"""
+        warn, crit = params
+        state = 3
+        infotext = "unknown output"
+        rssi = None
+
 	try:
-		warn ,crit = params
+                if DEBUG:
+                    logging.debug(info)
+                if not len(info):
+                    raise ValueError
         	rssi  = int(info[0][0])
 		if rssi < crit:
 			state = 2
@@ -55,15 +71,9 @@ def check_radwin_rssi(item,params,info):
 			state =0
 		infotext = "Device received signal strength indication is %s " % rssi
 	except ValueError:
-		state = 0 
 		infotext = "type mismatch value"
-		rssi = None
-		return (state,infotext,[("radwin_rssi",rssi)])
 	except:
 		infotext = "unknown value"
-		state = 3
-		rssi = None
-		return (state,infotext,["radwin_rssi",rssi])	
         return (state,  infotext, [("radwin_rssi",rssi,warn,crit)])
 
 check_info["radwin_rssi"] = {
