@@ -11,7 +11,7 @@ import requests
 import json
 import pprint
 import os
-import demjson
+import ast
 
 
 hosts_file = root_dir + "hosts.mk"
@@ -30,7 +30,7 @@ nocout_backup_paths = nocout_replication_paths + [
 ]
 
 host_tags = {
-    "snmp": "snmp-only|snmp",
+    "snmp": "snmp",
     "cmk_agent": "cmk-agent|tcp",
     "snmp_v1": "snmp-v1|snmp",
     "dual": "snmp-tcp|snmp|tcp",
@@ -56,9 +56,18 @@ g_service_vars = {
     "host_contactgroups": [],
     "bulkwalk_hosts": [],
     "extra_host_conf": {},
-    "extra_service_conf": {},
+    "extra_service_conf": {
+        "notification_interval": [],
+        "retry_check_interval": [],
+        "max_check_attempts": [],
+        "check_period": [],
+        "notification_period": []
+    },
     "static_checks": {},
-    "ping_levels": []
+    "ping_levels": [],
+    "checks": [],
+    "snmp_ports": [],
+    "snmp_communities": []
 }
 
 
@@ -77,6 +86,16 @@ def main():
             response = addhost()
         elif action == 'addservice':
             response = addservice()
+        elif action == 'edithost':
+            response = edithost()
+        elif action == 'editservice':
+            response = editservice()
+        elif action == 'deletehost':
+            response = deletehost()
+        elif action == 'deleteservice':
+            response = deleteservice()
+        elif action == 'sync':
+            response = sync()
     except Exception, e:
         response = {
             "success": 0,
@@ -180,7 +199,7 @@ def addservice():
         ping_levels = None
         if payload.get('cmd_params'):
             try:
-                cmd_params = demjson.decode(payload.get('cmd_params'))
+                cmd_params = ast.literal_eval(payload.get('cmd_params'))
                 for ds, thresholds in cmd_params.items():
                     if ds.strip().lower() == 'packets':
                         threshold_items[ds] = thresholds
@@ -194,12 +213,11 @@ def addservice():
                 else:
                     for k, v in threshold_items.items():
                         threshold_values = v
-                        html.write(pprint.pformat("Goes Here \n"))
-            except TypeError, e:
+            except Exception, e:
                 response.update({
                     "success": 0,
                     "message": "Service not added",
-                    "error_message": "cmd_params " + str(e).split(':')[0]
+                    "error_message": "cmd_params " + pprint.pformat(e)
                 })
                 return response
 
@@ -212,12 +230,12 @@ def addservice():
         serv_params = None
         if payload.get('serv_params'):
             try:
-                serv_params = demjson.decode(payload.get('serv_params'))
-            except TypeError, e:
+                serv_params = ast.literal_eval(payload.get('serv_params'))
+            except Exception, e:
                 response.update({
                     "success": 0,
                     "message": "Service not added",
-                    "error_message": "serv_params " + str(e).split(':')[0]
+                    "error_message": "serv_params " + pprint.pformat(e)
                 })
                 return response
 
@@ -232,6 +250,7 @@ def addservice():
         save_service(
             payload.get('host'),
             payload.get('service'),
+            payload.get('agent_tag'),
             service_tuple,
             serv_params,
             ping_levels,
@@ -246,7 +265,7 @@ def addservice():
             "error_code": 1
         })
     # Push these configs to all slave multisites
-    sync()
+    #sync()
 
     return response
 
@@ -296,7 +315,85 @@ def edithost():
     return response
 
 
+def editservice():
+    global g_service_vars
+    response = {
+        "success": 1,
+        "device_name": html.var('device_name'),
+        "service_name": html.var('service_name'),
+        "message": "Service edited successfully",
+        "error_code": None,
+        "error_message": None
+    }
+    payload = {
+        "host": html.var("device_name"),
+        "service": html.var("service_name"),
+        "serv_params": html.var('serv_params'),
+        "cmd_params": html.var('cmd_params'),
+        "agent_tag": html.var('agent_tag'),
+        "snmp_port": html.var("snmp_port"),
+        "snmp_community": html.var("snmp_community")
+    }
+    new_host = nocout_find_host(payload.get('host'))
+    
+    if not new_host:
+        #First delete the existing extries for the service
+        delete_host_rules(hostname=payload.get('host'), servicename=payload.get('service'))
+        cmd_params = None
+        t = ()
+        if payload.get('cmd_params'):
+            try:
+                cmd_params = ast.literal_eval(payload.get('cmd_params'))
+                for param, thresholds in cmd_params.items():
+                    t = ()
+                    t += (int(thresholds.get('warning')),)
+                    t += (int(thresholds.get('critical')),)
+                check_tuple = ([payload.get('host')], payload.get('service'), None, t)
+                g_service_vars['checks'].append(check_tuple)
+            except Exception, e:
+                response.update({
+                    "success": 0,
+                    "message": "Service not edited",
+                    "error_message": "cmd_params " + pprint.pformat(e)
+                })
+
+        serv_params = None
+        if payload.get('serv_params'):
+            try:
+                serv_params = ast.literal_eval(payload.get('serv_params'))
+            except Exception, e:
+                response.update({
+                    "success": 0,
+                    "message": "Service not added",
+                    "error_message": "serv_params " + pprint.pformat(e)
+                })
+                return response
+            for param, val in serv_params.items():
+                t = (val, host_tags.get(payload.get('agent_tag')), [payload.get('host')], payload.get('service'))
+                g_service_vars['extra_service_conf'][param].append(t)
+                t = ()
+
+        flag = write_new_host_rules()
+        if not flag:
+            response.update({
+                    "success": 0,
+                    "message": "Service Couldn't be edited",
+                    "error_code": None,
+                    "error_message": "rules.mk is locked or some other message"
+            })
+    else:
+        response.update({
+            "success": 0,
+            "error_message": html.var('device_name') + " not added yet",
+            "message": "Service not edited",
+            "error_code": 1
+        })
+
+    return response
+
+
 def deletehost():
+    global g_host_vars
     response = {
         "success": 1,
         "device_name": html.var('device_name'),
@@ -305,14 +402,146 @@ def deletehost():
         "error_message": None
     }
     payload = {
-        "host": html.var("device_name"),
-        "attr_alias": html.var("device_alias"),
-        "attr_ipaddress": html.var("ip_address"),
-        "site": html.var("site"),
-        "agent_tag": html.var("agent_tag")
+        "host": html.var("device_name")
     }
     load_file(hosts_file)
     new_host = nocout_find_host(payload.get('host'))
+
+    if not new_host:
+        delete_host_rules(hostname=payload.get('host'), servicename=None)
+        flag = write_new_host_rules()
+        if not flag:
+            response.update({
+                    "success": 0,
+                    "message": "Device Couldn't be deleted",
+                    "error_code": None,
+                    "error_message": "rules.mk is locked or some other message"
+            })
+            return response
+
+        g_host_vars['all_hosts'] = filter(lambda t: payload.get('host') not in t, g_host_vars['all_hosts'])
+        del g_host_vars['host_attributes'][payload.get('host')]
+        del g_host_vars['ipaddresses'][payload.get('host')]
+
+        flag = 0
+        flag = save_host(hosts_file)
+        if not flag:
+            response.update({
+                    "success": 0,
+                    "message": "Device Couldn't be deleted",
+                    "error_code": None,
+                    "error_message": "hosts.mk is locked or some other message"
+            })
+    else:
+        response.update({
+            "success": 0,
+            "message": payload.get('host') + " is not added yet"
+        })
+    
+    return response
+
+
+def deleteservice():
+    response = {
+        "success": 1,
+        "device_name": html.var('device_name'),
+        "service_name": html.var('service_name'),
+        "message": "Service deleted successfully",
+        "error_code": None,
+        "error_message": None
+    }
+    payload = {
+        "host": html.var("device_name"),
+        "service": html.var("service_name")
+    }
+    delete_host_rules(hostname=payload.get('host'), servicename=payload.get('service'))
+    flag = write_new_host_rules()
+    if not flag:
+        response.update({
+                "success": 0,
+                "message": "Service Couldn't be deleted",
+                "error_code": None,
+                "error_message": "rules.mk is locked or some other message"
+        })
+        
+    return response
+
+
+def delete_host_rules(hostname=None, servicename=None):
+    global g_service_vars
+    g_service_vars = {
+        "only_hosts": None,
+        "ALL_HOSTS": [],
+        "host_contactgroups": [],
+        "bulkwalk_hosts": [],
+        "extra_host_conf": {},
+        "extra_service_conf": {
+            "notification_interval": [],
+            "retry_check_interval": [],
+            "max_check_attempts": [],
+            "check_period": [],
+            "notification_period": []
+        },
+        "static_checks": {},
+        "ping_levels": [],
+        "checks": [],
+        "snmp_ports": [],
+        "snmp_communities": []
+    }
+
+    execfile(rules_file, g_service_vars, g_service_vars)
+    del g_service_vars['__builtins__']
+
+    if not servicename:
+        g_service_vars['checks'] = filter(lambda t: hostname not in t[0], g_service_vars['checks'])
+
+        for serv_param, param_vals in g_service_vars['extra_service_conf'].items():
+            g_service_vars['extra_service_conf'][serv_param] = filter(lambda t: hostname not in t[2], param_vals)
+
+        g_service_vars['snmp_ports'] = filter(lambda t: hostname not in t[2], g_service_vars['snmp_ports'])
+        g_service_vars['snmp_communities'] = filter(lambda t: hostname not in t[1], g_service_vars['snmp_communities'])
+
+        for check, check_vals in g_service_vars['static_checks'].items():
+            g_service_vars['static_checks'][check] = filter(lambda t: hostname not in t[2], check_vals)
+    else:
+        g_service_vars['checks'] = filter(lambda t: servicename not in t[1], g_service_vars['checks'])
+
+        for serv_param, param_vals in g_service_vars['extra_service_conf'].items():
+            g_service_vars['extra_service_conf'][serv_param] = filter(lambda t: servicename not in t[3], param_vals)
+
+
+def write_new_host_rules():
+    global g_service_vars
+    open(rules_file, 'w').close()
+    try:
+        f = os.open(rules_file, os.O_RDWR)
+    except OSError, e:
+        raise OSError, e
+        #return False
+    fcntl.flock(f, fcntl.LOCK_EX)
+    os.write(f, "bulkwalk_hosts = ")
+    os.write(f, pprint.pformat(g_service_vars['bulkwalk_hosts']))
+    os.write(f, " + bulkwalk_hosts\n\n")
+    os.write(f, "ping_levels = ")
+    os.write(f, pprint.pformat(g_service_vars['ping_levels']))
+    os.write(f, " + ping_levels\n\n")
+    os.write(f, "checks += ")
+    os.write(f, pprint.pformat(g_service_vars['checks']))
+    os.write(f, "\n\n")
+    os.write(f, "snmp_ports += ")
+    os.write(f, pprint.pformat(g_service_vars['snmp_ports']))
+    os.write(f, "\n\n")
+    os.write(f, "snmp_communities += ")
+    os.write(f, pprint.pformat(g_service_vars['snmp_communities']))
+    os.write(f, "\n\n")
+
+    for serv_param, param_vals in g_service_vars['extra_service_conf'].items():
+        os.write(f, 'extra_service_conf[' + pprint.pformat(serv_param) + '] = ')
+        os.write(f, pprint.pformat(param_vals))
+        os.write(f, '\n\n')
+    os.close(f)
+
+    return True
 
 
 def sync():
@@ -326,21 +555,22 @@ def sync():
 
     nocout_create_sync_snapshot()
     nocout_sites = nocout_distributed_sites()
-    if len(nocout_sites) == 1:
-        response.update({
-            "success": 0,
-            "message": "No slave multisites present"
-        })
-        return response
 
     for site, attrs in nocout_sites.items():
         if attrs.get("replication") == "slave":
             response_text = nocout_synchronize_site(site, attrs, True)
             if response_text is True:
                 sites_affected.append(site)
-    response.update({
-        "message": "Config pushed to " + ','.join(sites_affected)
-    })
+    if len(sites_affected):
+        response.update({
+            "message": "Config pushed to " + ','.join(sites_affected)
+        })
+    else:
+        response.update({
+            "message": "Config Not Pushed, either no slave sites to push " +\
+                "config to or some wrong data supplied",
+            "success": 0
+        })
 
     return response
 
@@ -422,11 +652,12 @@ def load_file(file_path):
 
 def save_host(file_path):
     global g_host_vars
+    #Erase the file contents first
+    open(file_path, 'w').close()
     try:
         f = os.open(file_path, os.O_RDWR)
     except OSError, e:
         raise OSError, e
-        return False
     fcntl.flock(f, fcntl.LOCK_EX)
     os.write(f, "# encoding: utf-8\n\n")
 
@@ -457,7 +688,7 @@ def save_host(file_path):
     return True
 
 
-def save_service(host, service_name, service_tuple, serv_params, ping_levels, snmp_port_tuple, snmp_community):
+def save_service(host, service_name, host_tag, service_tuple, serv_params, ping_levels, snmp_port_tuple, snmp_community):
     conf = None
     try:
         with open(rules_file, 'a') as f:
@@ -471,10 +702,11 @@ def save_service(host, service_name, service_tuple, serv_params, ping_levels, sn
                 f.write("]\n\n")
             if serv_params:
                 for param, val in serv_params.items():
-                    f.write('extra_service_conf["' + param + '"] += [\n')
-                    conf = (val, host, service_name)
+                    f.write('extra_service_conf["' + param + '"] = [\n')
+                    conf = (val, [host_tags.get(host_tag)], [host], service_name)
                     f.write(pprint.pformat(conf) + "\n")
-                    f.write("]\n\n")
+                    f.write("]")
+                    f.write('\n\n')
             if ping_levels:
                 conf = None
                 f.write("ping_levels += [\n(")
@@ -483,24 +715,12 @@ def save_service(host, service_name, service_tuple, serv_params, ping_levels, sn
                     'rta': ping_levels.get('rta', (3000.0, 5000.0)),
                     'packets': ping_levels.get('packets', 20)
                 })
-                f.write(pprint.pformat(conf) + "),\n] + ping_levels")
+                f.write(pprint.pformat(conf) + "),\n]")
                 f.write("\n\n")
             if snmp_community:
                 f.write("snmp_communities += [\n")
                 f.write(pprint.pformat(snmp_community) + ",\n]")
                 f.write("\n\n")
-    except OSError, e:
-        raise OSError(e)
-
-
-def save_service_old(service_name, service_tuple):
-    try:
-        with open(rules_file, 'a') as f:
-            f.write("\nstatic_checks.setdefault('" + service_name + "', [])\n")
-            f.write("static_checks['" + service_name + "'] =  [\n")
-            f.write(pprint.pformat(service_tuple))
-            f.write(",\n")
-            f.write("] + static_checks['" + service_name + "']\n\n")
     except OSError, e:
         raise OSError(e)
     
@@ -527,9 +747,21 @@ def nocout_add_host_attributes(host_attrs):
 
 def nocout_find_host(host):
     new_host = True
-    load_file(hosts_file)
-    global g_host_vars
-    for entry in g_host_vars['all_hosts']:
+    ALL_HOSTS = None
+    local_host_vars = {
+        "FOLDER_PATH": "",
+        "ALL_HOSTS": ALL_HOSTS, # [ '@all' ]
+        "all_hosts": [],
+        "clusters": {},
+        "ipaddresses": {},
+        "extra_host_conf": { "alias" : [] },
+        "extra_service_conf": { "_WATO" : [] },
+        "host_attributes": {},
+        "host_contactgroups": [],
+        "_lock": False,
+    }
+    execfile(hosts_file, local_host_vars, local_host_vars)
+    for entry in local_host_vars['all_hosts']:
         if host in entry:
             new_host = False
             break
