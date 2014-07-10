@@ -172,6 +172,102 @@ def addhost():
 
 
 def addservice():
+    global g_service_vars
+    response = {
+        "success": 1,
+        "device_name": html.var('device_name'),
+        "service_name": html.var('service_name'),
+        "message": "Service added successfully",
+        "error_code": None,
+        "error_message": None
+    }
+    payload = {
+        "host": html.var("device_name"),
+        "service": html.var("service_name"),
+        "serv_params": html.var('serv_params'),
+        "cmd_params": html.var('cmd_params'),
+        "agent_tag": html.var('agent_tag'),
+        "snmp_port": html.var("snmp_port"),
+        "snmp_community": html.var("snmp_community")
+    }
+    new_host = nocout_find_host(payload.get('host'))
+
+    if not new_host:
+        # First delete all the existing entries for (host, service) pair
+        delete_host_rules(hostname=payload.get('host'), servicename=payload.get('service'))
+        cmd_params = None
+        t = ()
+        if payload.get('cmd_params'):
+            try:
+                cmd_params = ast.literal_eval(payload.get('cmd_params'))
+                for param, thresholds in cmd_params.items():
+                    t = ()
+                    t += (int(thresholds.get('warning')),)
+                    t += (int(thresholds.get('critical')),)
+                check_tuple = ([payload.get('host')], payload.get('service'), None, t)
+                g_service_vars['checks'].append(check_tuple)
+            except Exception, e:
+                response.update({
+                    "success": 0,
+                    "message": "Service not added",
+                    "error_message": "cmd_params " + pprint.pformat(e)
+                })
+
+        serv_params = None
+        if payload.get('serv_params'):
+            try:
+                serv_params = ast.literal_eval((payload.get('serv_params')))
+            except Exception, e:
+                response.update({
+                    "success": 0,
+                    "message": "Service not added",
+                    "error_message": "serv_params " + pprint.pformat(e)
+                })
+                return response
+            for param, val in serv_params.items():
+                t = (val, host_tags.get(payload.get('agent_tag')), [payload.get('host')], payload.get('service'))
+                g_service_vars['extra_service_conf'][param].append(t)
+                t = ()
+
+        snmp_port_tuple = None
+        if payload.get('snmp_port'):
+            snmp_port_tuple = (int(payload.get('snmp_port')), [], [payload.get('host')])
+            g_service_vars['snmp_ports'].append(snmp_port_tuple)
+        
+        snmp_community = None
+        if payload.get('snmp_community'):
+            snmp_community_list = ast.literal_eval(payload.get('snmp_community'))
+            if snmp_community_list.get('version') == 'v1':
+                snmp_community = (snmp_community_list.get('read_community'), [payload.get('host')])
+            elif snmp_community_list.get('version') == 'v2c':
+                snmp_community = (snmp_community_list.get('read_community'), [payload.get('host')])
+            elif snmp_community_list.get('version') == 'v3':
+                snmp_community = ((snmp_community_list.get('security_level'),snmp_community_list.get('auth_protocol'),
+                    snmp_community_list.get('security_name'),snmp_community_list.get('auth_password'),
+                    snmp_community_list.get('private_phase'),snmp_community_list.get('private_passphase')),
+                    [payload.get('host')])
+            g_service_vars['snmp_communities'].append(snmp_community)
+
+        flag = write_new_host_rules()
+        if not flag:
+            response.update({
+                    "success": 0,
+                    "message": "Service couldn't added",
+                    "error_code": None,
+                    "error_message": "rules.mk is locked or some other message"
+            })
+    else:
+        response.update({
+            "success": 0,
+            "error_message": html.var('device_name') + " not added yet",
+            "message": "Service not added",
+            "error_code": 1
+        })
+
+    return response
+
+
+def addservice_old():
     global host_tags
     tags = []
     service_tuple = []
@@ -242,7 +338,16 @@ def addservice():
 
         snmp_community = None
         if payload.get('snmp_community'):
-            snmp_community = (payload.get('snmp_community'), [payload.get('host')])
+            snmp_community_list = ast.literal_eval(payload.get('snmp_community'))
+            if snmp_community_list.get('version') == 'v1':
+                snmp_community = (snmp_community_list.get('read_community'), [payload.get('host')])
+            elif snmp_community_list.get('version') == 'v2c':
+                snmp_community = (snmp_community_list.get('read_community'), [payload.get('host')])
+            elif snmp_community_list.get('version') == 'v3':
+                snmp_community = ((snmp_community_list.get('security_level'),snmp_community_list.get('auth_protocol'),
+                    snmp_community_list.get('security_name'),snmp_community_list.get('auth_password'),
+                    snmp_community_list.get('private_phase'),snmp_community_list.get('private_passphase')),
+                    [payload.get('host')])
 
         give_permissions(rules_file)
         tags = host_tags.get(payload.get('agent_tag'))
@@ -374,6 +479,25 @@ def editservice():
                 g_service_vars['extra_service_conf'][param].append(t)
                 t = ()
 
+        snmp_port_tuple = None
+        if payload.get('snmp_port'):
+            snmp_port_tuple = (int(payload.get('snmp_port')), [], [payload.get('host')])
+            g_service_vars['snmp_ports'].append(snmp_port_tuple)
+        
+        snmp_community = None
+        if payload.get('snmp_community'):
+            snmp_community_list = ast.literal_eval(payload.get('snmp_community'))
+            if snmp_community_list.get('version') == 'v1':
+                snmp_community = (snmp_community_list.get('read_community'), [payload.get('host')])
+            elif snmp_community_list.get('version') == 'v2c':
+                snmp_community = (snmp_community_list.get('read_community'), [payload.get('host')])
+            elif snmp_community_list.get('version') == 'v3':
+                snmp_community = ((snmp_community_list.get('security_level'),snmp_community_list.get('auth_protocol'),
+                    snmp_community_list.get('security_name'),snmp_community_list.get('auth_password'),
+                    snmp_community_list.get('private_phase'),snmp_community_list.get('private_passphase')),
+                    [payload.get('host')])
+            g_service_vars['snmp_communities'].append(snmp_community)
+
         flag = write_new_host_rules()
         if not flag:
             response.update({
@@ -493,6 +617,8 @@ def delete_host_rules(hostname=None, servicename=None):
     execfile(rules_file, g_service_vars, g_service_vars)
     del g_service_vars['__builtins__']
 
+    if hostname is None:
+        return
     if not servicename:
         g_service_vars['checks'] = filter(lambda t: hostname not in t[0], g_service_vars['checks'])
 
@@ -500,7 +626,7 @@ def delete_host_rules(hostname=None, servicename=None):
             g_service_vars['extra_service_conf'][serv_param] = filter(lambda t: hostname not in t[2], param_vals)
 
         g_service_vars['snmp_ports'] = filter(lambda t: hostname not in t[2], g_service_vars['snmp_ports'])
-        g_service_vars['snmp_communities'] = filter(lambda t: hostname not in t[1], g_service_vars['snmp_communities'])
+        g_service_vars['snmp_communities'] = filter(lambda t: hostname not in t[-1], g_service_vars['snmp_communities'])
 
         for check, check_vals in g_service_vars['static_checks'].items():
             g_service_vars['static_checks'][check] = filter(lambda t: hostname not in t[2], check_vals)
@@ -511,6 +637,8 @@ def delete_host_rules(hostname=None, servicename=None):
         for serv_param, param_vals in g_service_vars['extra_service_conf'].items():
             iter_func = ifilterfalse(lambda t: hostname in t[2] and servicename in t[3], param_vals)
             g_service_vars['extra_service_conf'][serv_param] = map(lambda x: x, iter_func)
+        g_service_vars['snmp_ports'] = filter(lambda t: hostname not in t[2], g_service_vars['snmp_ports'])
+        g_service_vars['snmp_communities'] = filter(lambda t: hostname not in t[-1], g_service_vars['snmp_communities'])
 
 
 def write_new_host_rules():
