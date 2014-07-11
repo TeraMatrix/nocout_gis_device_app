@@ -71,35 +71,29 @@ g_service_vars = {
 
 
 def main():
-    response = ''
+    local_response = ''
     action = ''
     action = html.var('mode')
     host = html.var('device_name')
     #f = (lambda x: x)
     #f(addhost)()
-    try:
-        # Calling the appropriate function based on action
-        #response = globals()[action]()
-        #TO DO:: Call the appropriate modes through a global
-        if action == 'addhost':
-            response = addhost()
-        elif action == 'addservice':
-            response = addservice()
-        elif action == 'edithost':
-            response = edithost()
-        elif action == 'editservice':
-            response = editservice()
-        elif action == 'deletehost':
-            response = deletehost()
-        elif action == 'deleteservice':
-            response = deleteservice()
-        elif action == 'sync':
-            response = sync()
-    except Exception, e:
-        response = {
-            "success": 0,
-            "message": pprint.pformat(e)
-        }
+    # Calling the appropriate function based on action
+    #response = globals()[action]()
+    #TO DO:: Call the appropriate modes through a global
+    if action == 'addhost':
+        response = addhost()
+    elif action == 'addservice':
+        response = addservice()
+    elif action == 'edithost':
+        response = edithost()
+    elif action == 'editservice':
+        response = editservice()
+    elif action == 'deletehost':
+        response = deletehost()
+    elif action == 'deleteservice':
+        response = deleteservice()
+    elif action == 'sync':
+        response = sync()
 
     html.write(pprint.pformat(response))
 
@@ -223,7 +217,7 @@ def addservice():
                 })
                 return response
             for param, val in serv_params.items():
-                t = (val, host_tags.get(payload.get('agent_tag')), [payload.get('host')], payload.get('service'))
+                t = (val, [host_tags.get(payload.get('agent_tag'))], [payload.get('host')], payload.get('service'))
                 g_service_vars['extra_service_conf'][param].append(t)
                 t = ()
 
@@ -271,7 +265,7 @@ def edithost():
         "device_name": html.var('device_name'),
         "message": "Device edited successfully",
         "error_code": None,
-        "error_message": Noneread_comm
+        "error_message": None
     }
     payload = {
         "host": html.var("device_name"),
@@ -364,7 +358,7 @@ def editservice():
                 })
                 return response
             for param, val in serv_params.items():
-                t = (val, host_tags.get(payload.get('agent_tag')), [payload.get('host')], payload.get('service'))
+                t = (val, [host_tags.get(payload.get('agent_tag'))], [payload.get('host')], payload.get('service'))
                 g_service_vars['extra_service_conf'][param].append(t)
                 t = ()
 
@@ -490,11 +484,9 @@ def delete_host_rules(hostname=None, servicename=None):
         "bulkwalk_hosts": [],
         "extra_host_conf": {},
         "extra_service_conf": {
-            "notification_interval": [],
             "retry_check_interval": [],
             "max_check_attempts": [],
-            "check_period": [],
-            "notification_period": []
+            "normal_check_interval": []
         },
         "static_checks": {},
         "ping_levels": [],
@@ -635,6 +627,7 @@ def nocout_create_sync_snapshot():
     global nocout_replication_paths
     #os.remove(sync_snapshot_file)
     tmp_path = "%s-%s" % (sync_snapshot_file, 'nocout')
+    html.write(pprint.pformat(tmp_path))
     multitar.create(tmp_path, nocout_replication_paths)
     os.rename(tmp_path, sync_snapshot_file)
 
