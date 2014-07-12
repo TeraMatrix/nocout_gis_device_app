@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 """
-Uplink utilizationPoller script.
+Uplink utilizationPoller script
 
 This is part of device application. 
 Poller script determines the port current Uplink utilization in terms of number of octets in downlink direction.
@@ -9,7 +9,7 @@ poller script takes the snmp value of OID .1.3.6.1.2.1.2.2.1.10 from snmp agent 
 Total Uplink utilization is sent to device application 
 
 """
-####################################################
+# ###################################################
 #Function: check_radwin_ul_utilization
 #
 #Parameters:info(SNMP Output of specific oid of ul utilization) _no_params (currently no support of parameters)
@@ -18,8 +18,22 @@ Total Uplink utilization is sent to device application
 #
 ###################################################
 
+
+import logging
+
+import os
+
+try:
+    log_file = "nocout/log_plugins.log"
+    with open(log_file, 'a+') as f:
+        pass
+    logging.basicConfig(filename=log_file, level=logging.CRITICAL)
+except:
+    pass
+
+
 def check_radwin_ul_utilization(item, _no_params, info):
-	"""
+    """
                 check_radwin_ul_utilization calculates the port uplink utilization
 
                 Args:
@@ -33,7 +47,7 @@ def check_radwin_ul_utilization(item, _no_params, info):
                                         0 : OK
                                         1 : Warning
                                         2: Critical
-					3: unknown
+                    3: unknown
                         infotext(string):
                                         plugin output
                                         Example : [port_1] ul_utilization:233333
@@ -43,42 +57,43 @@ def check_radwin_ul_utilization(item, _no_params, info):
                                         Example: port_1=233333;;;;;
                         Raises:
                                 ValueError ,Exception
-	"""
+    """
+    state = 3
+    infotext = "unknown output"
+    status_list = ['']
+    try:
+        logging.debug("radwin_ul_utilization SNMP Output %s", info)
+        status_list = []
+        if not info[0]:
+            raise ValueError
+        infotext = ""
+        for index in range(len(info)):
+            link_in_octets = info[index][1]
+            if_name = info[index][0]
+            if if_name == None:
+                if_name = "unknown interface name"
+            if ' ' in if_name:
+                if_name = str.replace(if_name, ' ', '_')
+            status_list.append((if_name, link_in_octets))
+        state = 0
+        for name, in_octets in status_list:
+            infotext += "[%s] ul_utilization:%s" % (name, in_octets)
+    except ValueError:
+        infotext = "interface utilization type not correct"
+        logging.critical("radwin_ul_utilization %s", infotext, exc_info=True)
+    except:
+        infotext = "Unkown value"
+        logging.critical("radwin_ul_utilization %s", infotext, exc_info=True)
+    return (state, infotext, status_list)
 
-
-	try:
-		if not info[0]:
-			return (3,"No response from device")
-		status_list = []
-		infotext = ""
-		for index in range(len(info)):
-			link_in_octets  = info[index][1]
-                        if_name = info[index][0]
-                        if if_name == None:
-                                if_name = "unknown interface name"
-			if ' ' in if_name:
-				if_name = str.replace(if_name,' ','_')
-			status_list.append((if_name,link_in_octets))
-                state = 0
-                for name,in_octets in status_list:
-                        infotext += "[%s] ul_utilization:%s" %(name,in_octets)
-        except ValueError:
-                state = 0
-                infotext = "interface utilization type not correct"
-                return (state,infotext,[''])
-	except:
-		state = 3
-		infotext = "Unkown value"
-		return (state,infotext,[''])
-        return (state,  infotext, status_list)
 
 check_info["radwin_ul_utilization"] = {
-    'check_function'        :  check_radwin_ul_utilization,
-    'service_description'   :  'radwin_ul_utilization',
-    'has_perfdata'          :  True,
+    'check_function': check_radwin_ul_utilization,
+    'service_description': 'radwin_ul_utilization',
+    'has_perfdata': True,
 }
 
 #################################################################
 # SNMP OID Of the poller_script parameters 
 #################################################################
-snmp_info["radwin_ul_utilization"] = ( ".1.3.6.1.2.1.2.2.1", [ "2" ,"10"] )
+snmp_info["radwin_ul_utilization"] = ( ".1.3.6.1.2.1.2.2.1", ["2", "10"] )

@@ -8,7 +8,7 @@ poller script takes the snmp value of OID .1.3.6.1.4.1.4458.1000.1.5.40.2.0 from
 Master slave sync state information is sent to device application 
 
 """
-####################################################################
+# ###################################################################
 # Function: check_radwin_sync_state_status
 #
 # Parameters : info (SNMP output of OID) _no_params(currently no params supported)
@@ -16,70 +16,85 @@ Master slave sync state information is sent to device application
 # Ouptut : service state ,plugin output and performance_data
 ####################################################################
 
-def check_radwin_sync_state_status(item,_no_params,info):
-        """
-                check_radwin_sync_state_status function calculates the master slave sync state
+import logging
 
-                Args:
-                        item (str) Specific item on SNMP output on which we want to filter results
-                
-                Kwargs:
-                        params (tuple) Check parameters for critical and warning state of service
+import os
 
-                Returns:
-                        state (int) :
-                                        0 : OK
-                                        1 : Warning
-                                        2: Critical
-					3: unknown
-                        infotext(string):
-                                        plugin output
-                                        Example : site sync state is independentUnit
+try:
+    log_file = "nocout/log_plugins.log"
+    with open(log_file, 'a+') as f:
+        pass
+    logging.basicConfig(filename=log_file, level=logging.DEBUG)
+except:
+    pass
 
-                        performance_data  (list):
-                                        performance data
-                                        Example: site_sync_state=independentUnit;;;;
-                        Raises:
-                                ValueError ,Exception
-	"""
-	try:
-		if info[0][0]:
-                	sync_state  = int(info[0][0])
-                	if sync_state == 1:
-                       		sync_text = "notSupported"
-                	elif sync_state == 2:
-                        	sync_text = "independentUnit"
-                	elif sync_state == 3:
-                        	sync_text= "hubSyncMaster"
-                	elif sync_state == 4:
-                        	sync_text = "hubSyncClientContinueTx"
-                	elif sync_state == 5:
-                        	sync_text= "hubSyncClientDisableTx"
-                	else:        
-				sync_text ="unknown value"
-                	state = 0
-                	infotext = "site sync state is %s" % (sync_text)
-	except ValueError:
-		state = 0
-		infotext = "type mismatch value"
-		sync_text  = None
-		return (state,infotext,[("site_sync_state",sync_text)])
-        except:
-                infotext = "unknown value"
-                state = 3
-		sync_text = None
-		return (state,infotext,[("site_sync_state",sync_text)])
-		
-        return (state,  infotext, [("site_sync_state",sync_text)])
+
+def check_radwin_sync_state_status(item, _no_params, info):
+    """
+            check_radwin_sync_state_status function calculates the master slave sync state
+
+            Args:
+                    item (str) Specific item on SNMP output on which we want to filter results
+
+            Kwargs:
+                    params (tuple) Check parameters for critical and warning state of service
+
+            Returns:
+                    state (int) :
+                                    0 : OK
+                                    1 : Warning
+                                    2: Critical
+                3: unknown
+                    infotext(string):
+                                    plugin output
+                                    Example : site sync state is independentUnit
+
+                    performance_data  (list):
+                                    performance data
+                                    Example: site_sync_state=independentUnit;;;;
+                    Raises:
+                            ValueError ,Exception
+    """
+    state = 3
+    sync_text = None
+    infotext = "unknown output"
+    try:
+        logging.debug("radwin_sync_state_status SNMP Output %s", info)
+        if info[0][0]:
+            sync_state = int(info[0][0])
+            if sync_state == 1:
+                sync_text = "notSupported"
+            elif sync_state == 2:
+                sync_text = "independentUnit"
+            elif sync_state == 3:
+                sync_text = "hubSyncMaster"
+            elif sync_state == 4:
+                sync_text = "hubSyncClientContinueTx"
+            elif sync_state == 5:
+                sync_text = "hubSyncClientDisableTx"
+            else:
+                sync_text = "unknown value"
+            state = 0
+            infotext = "site sync state is %s" % (sync_text)
+    except ValueError:
+        infotext = "type mismatch value"
+        logging.critical("radwin_sync_state_status %s", infotext, exc_info=True)
+    except:
+        infotext = "unknown value"
+        logging.critical("radwin_sync_state_status %s", infotext, exc_info=True)
+#        return (state, infotext, [("site_sync_state", sync_text)])
+
+    return (state, infotext, [("site_sync_state", sync_text)])
+
 
 check_info["radwin_sync_state_status"] = {
-        'check_function'        :  check_radwin_sync_state_status,
-        'service_description'   :  'radwin_sync_state_status',
-        'has_perfdata'          :  True,
+    'check_function': check_radwin_sync_state_status,
+    'service_description': 'radwin_sync_state_status',
+    'has_perfdata': True,
 }
 
 ####################################################################
 #	SNMP OID
 ####################################################################
-snmp_info["radwin_sync_state_status"] = ( ".1.3.6.1.4.1.4458.1000.1.5.40", [ "2.0" ] )
+snmp_info["radwin_sync_state_status"] = ( ".1.3.6.1.4.1.4458.1000.1.5.40", ["2.0"] )
 
