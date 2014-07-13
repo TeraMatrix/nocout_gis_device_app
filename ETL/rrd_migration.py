@@ -58,6 +58,8 @@ def build_export(site, host, ip, mongo_host, mongo_db, mongo_port):
 			data_dict['service'] = 'ping'
 		else:
 			data_dict['service'] = serv_disc
+		if serv_disc.endswith('_status'):
+			continue			
 		threshold_values = get_threshold(perf_data)
 		for ds in root.findall('DATASOURCE'):
 			params.append(ds.find('NAME').text)

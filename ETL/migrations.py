@@ -40,6 +40,14 @@ def main():
             	nosql_db=options.get('service_event').get('nosql_db'),
             	sql_db=options.get('service_event').get('sql_db'), table_name=options.get('service_event').get('table_name'), ip=options.get('ip')
 	)	
+	status_script = options.get('status').get('script')
+	status_service_migration_script = __import__(status_script)
+	status_service_migration_script.main(site=options.get('site'), host=options.get('host'),
+		user=options.get('user'), port=options.get('port'),
+            	sql_passwd=options.get('sql_passwd'),
+            	nosql_db=options.get('status').get('nosql_db'),
+            	sql_db=options.get('status').get('sql_db'), table_name=options.get('status').get('table_name'), ip=options.get('ip')
+        )
 	inventory_script = options.get('inventory').get('script')
 	inventory_service_migration_script = __import__(inventory_script)
 	inventory_service_migration_script.main(site=options.get('site'), host=options.get('host'),

@@ -52,7 +52,7 @@ def inventory_perf_data_main():
 		for section, options in configs.items():
 			site = options.get('site')
 			query = "GET hosts\nColumns: host_name\nOutputFormat: json\n"
-			output = json.loads(rrd_main.get_from_socket('nt2',query))
+			output = json.loads(rrd_main.get_from_socket(site,query))
 			inventory_perf_data(site,output)
 	except SyntaxError, e:
 		raise MKGeneralException(("Can not get performance data: %s") % (e))
