@@ -9,13 +9,27 @@ poller script takes the snmp value of OID .1.3.6.1.2.1.1.3.0 from snmp agent of 
 Radwin total uptime is sent to device application 
 
 """
-#########################################################
+# ########################################################
 # Function : check_radwin_uptime
 # Parameters : Info (SNMP output) _no_params (currently poller script does not support parameters),item)
 # Output : Service state ,plugin output and performance data output
 #########################################################
+
+import logging
+
+import os
+
+try:
+    log_file = "nocout/log_plugins.log"
+    with open(log_file, 'a+') as f:
+        pass
+    logging.basicConfig(filename=log_file, level=logging.CRITICAL)
+except:
+    pass
+
+
 def check_radwin_uptime(item, _no_params, info):
-	"""
+    """
                 check_radwin_uptime function calculates the total uptime
 
                 Args:
@@ -29,7 +43,7 @@ def check_radwin_uptime(item, _no_params, info):
                                         0 : OK
                                         1 : Warning
                                         2: Critical
-					3: unknown
+                    3: unknown
                         infotext(string):
                                         plugin output
                                         Example : OK - up since Sun Jun 22 06:45:34 2014 (12d 21:06:44)
@@ -39,42 +53,42 @@ def check_radwin_uptime(item, _no_params, info):
                                         Example: uptime=1112804;;;;
                         Raises:
                                 ValueError ,Exception
-	"""
+    """
+    state = 3
+    uptime = None
+    infotext = "unknown output"
+    try:
+        logging.debug("radwin_uptime SNMP Output %s", info)
+        if info[0][0]:
+            uptime = int(info[0][0])
+            uptime = uptime / 100
+            seconds = uptime % 60
+            rem = uptime / 60
+            minutes = rem % 60
+            hours = (rem % 1440) / 60
+            days = rem / 1440
+            now = int(time.time())
+            since = time.strftime("%c", time.localtime(now - uptime))
+            state = 0
+            infotext = "up since %s (%dd %02d:%02d:%02d)" % (since, days, hours, minutes, seconds)
+    except ValueError:
+        infotext = "type mismatch on value"
+        logging.critical("radwin_uptime %s", infotext, exc_info=True)
+    except:
+        infotext = "unkown value"
+        logging.critical("radwin_uptime %s", infotext, exc_info=True)
 
-	try:
-		if info[0][0]:
-			uptime  = int(info[0][0])
-        		uptime = uptime/100
-        		seconds = uptime % 60
-        		rem = uptime / 60
-        		minutes = rem % 60
-        		hours = (rem % 1440) / 60
-        		days = rem / 1440
-        		now = int(time.time())
-        		since = time.strftime("%c", time.localtime(now - uptime))
-			state = 0	
-			infotext = "up since %s (%dd %02d:%02d:%02d)" % (since, days, hours, minutes, seconds)
-	except ValueError:
-		state = 0
-		infotext ="type mismatch on value"
-		uptime = None
-		return (state,infotext,["uptime",uptime])
-	except:
-		state = 3
-		infotext = "Unkown value"
-		uptime = None
-		return (state,infotext,["uptime",uptime])
-	return (state,  infotext,[("uptime",uptime)])
+    return (state, infotext, [("uptime", uptime)])
 
 check_info["radwin_uptime"] = {
-	'check_function'        :  check_radwin_uptime,
-	'service_description'   :  'radwin_uptime',
-	'has_perfdata'		:  True
+'check_function': check_radwin_uptime,
+'service_description': 'radwin_uptime',
+'has_perfdata': True
 
 }
 
 """
 	SNMP OID of the Service radwin_uptime
 """
-snmp_info["radwin_uptime"] = ( ".1.3.6.1.2.1.1", [ "3.0" ] )
+snmp_info["radwin_uptime"] = ( ".1.3.6.1.2.1.1", ["3.0"] )
 

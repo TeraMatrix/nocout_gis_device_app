@@ -9,7 +9,7 @@ SS ID information is sent to device application
 
 
 """
-##################################################################
+# #################################################################
 # Function : check_radwin_ssid_invent
 #
 # Parameters : info (SNMP Output) ,_no_params(currently no available parameters )
@@ -17,8 +17,21 @@ SS ID information is sent to device application
 # Output:     service state , plugin ouptut 
 #################################################################
 
+import logging
+
+import os
+
+try:
+    log_file = "nocout/log_plugins.log"
+    with open(log_file, 'a+') as f:
+        pass
+    logging.basicConfig(filename=log_file, level=logging.CRITICAL)
+except:
+    pass
+
+
 def check_radwin_ssid_invent(item, _no_params, info):
-	"""
+    """
                 check_radwin_ssid_invent function calculates the ssid of device
 
                 Args:
@@ -32,34 +45,35 @@ def check_radwin_ssid_invent(item, _no_params, info):
                                         0 : OK
                                         1 : Warning
                                         2: Critical
-					3: unknown
+                    3: unknown
                         infotext(string):
                                         plugin output
-                                        Example : SELUCREHpondy to ngm 
+                                        Example : SELUCREHpondy to ngm
 
                         Raises:
                                 Exception
-	"""
+    """
+    state = 3
+    infotext = "unknown output"
+    try:
+        logging.debug("radwin_ssid_invent SNMP Output %s", info)
+        if info[0][0]:
+            ssid = info[0][0]
+            state = 0
+            infotext = "%s" % ssid
+    except:
+        infotext = "Unknown value"
+        logging.critical("radwin_ssid_invent %s", infotext, exc_info=True)
+    return (state, infotext)
 
-        try:
-		if info[0][0]:
-			ssid  = info[0][0]
-        		state = 0
-        		infotext = "%s" % ssid
-	except:
-		state = 3
-		infotext = "Unknown value"
-		ssid = None
-		return (state,infotext)
-        return (state,  infotext)
 
 check_info["radwin_ssid_invent"] = {
-    'check_function'        :  check_radwin_ssid_invent,
-    'service_description'   :  'radwin_ssid_invent',
+    'check_function': check_radwin_ssid_invent,
+    'service_description': 'radwin_ssid_invent',
 }
 
 ##########################################################################
 #		SNMP OID
 #########################################################################
-snmp_info["radwin_ssid_invent"] = ( ".1.3.6.1.4.1.4458.1000.1", [ "5.3" ] )
+snmp_info["radwin_ssid_invent"] = ( ".1.3.6.1.4.1.4458.1000.1", ["5.3"] )
 

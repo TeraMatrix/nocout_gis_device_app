@@ -9,7 +9,7 @@ port service throughput information is sent to device application
 
 
 """
-##############################################################
+# #############################################################
 # Function : check_radwin_service_throughput
 #
 # Parameters : info (SNMP output), _no_params (scripts params)
@@ -17,10 +17,20 @@ port service throughput information is sent to device application
 # Output:   service state,plugin output ,peformance data
 ###############################################################
 
+import logging
 
+import os
+
+try:
+    log_file = "nocout/log_plugins.log"
+    with open(log_file, 'a+') as f:
+        pass
+    logging.basicConfig(filename=log_file, level=logging.CRITICAL)
+except:
+    pass
 
 def check_radwin_service_throughput(item, _no_params, info):
-	"""
+    """
                 check_radwin_service_throughput function calculates the service throughput of port
 
                 Args:
@@ -34,7 +44,7 @@ def check_radwin_service_throughput(item, _no_params, info):
                                         0 : OK
                                         1 : Warning
                                         2: Critical
-					3: unknown
+                    3: unknown
                         infotext(string):
                                         plugin output
                                         Example : Device service_throughput is 230000
@@ -44,35 +54,36 @@ def check_radwin_service_throughput(item, _no_params, info):
                                         Example: Service_throughput=230000;;;;
                         Raises:
                                 ValueError ,Exception
-	"""
+    """
+    state = 3
+    service_throughput = None
+    infotext = "unknown output"
+    try:
+        logging.debug("radwin_service_throughput SNMP Output %s", info)
+        service_throughput = int(info[0][0])
+        if service_throughput == 0 or service_throughput < -1:
+            state = 0
+            infotext = "Device service throughput is Zero or negative"
+        else:
+            state = 0
+            infotext = "Device service_throughput is %d " % service_throughput
+    except ValueError:
+        infotext = "type mismatch value"
+        logging.critical("radwin_service_throughput %s", infotext, exc_info=True)
+    except:
+        infotext = "unknown value"
+        logging.critical("radwin_service_throughput %s", infotext, exc_info=True)
+    return (state, infotext, [("service_throughput", service_throughput)])
 
-	try:
-		service_throughput  = int(info[0][0])
-		if service_throughput == 0 or service_throughput < -1:
-			state = 0
-			infotext = "Device service throughput is Zero or negative" 
-		else:
-			state = 0
-			infotext = "Device service_throughput is %d " % service_throughput
-	except ValueError:
-		state = 0
-		infotext = "type mismatch value"
-		service_throughput = None
-		return (state,infotext,[("Service_throughput",service_throughput)])
-	except:
-		state = 3
-		infotext = "unknown value"
-		service_throughput = None	
-	return (state,  infotext,[("Service_throughput",service_throughput)])
 
 check_info["radwin_service_throughput"] = {
-	'check_function'        :  check_radwin_service_throughput,
-	'service_description'   :  'radwin_service_throughput',
-	'has_perfdata'		:  True,
-	
+'check_function': check_radwin_service_throughput,
+'service_description': 'radwin_service_throughput',
+'has_perfdata': True,
+
 }
 
 #################################################################################
 #		SNMP OID
 #################################################################################
-snmp_info["radwin_service_throughput"] = ( ".1.3.6.1.4.1.4458.1000.2.2", [ "14.0" ] )
+snmp_info["radwin_service_throughput"] = ( ".1.3.6.1.4.1.4458.1000.2.2", ["14.0"] )

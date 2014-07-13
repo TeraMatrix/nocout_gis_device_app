@@ -8,7 +8,7 @@ poller script takes the snmp value of OID .1.3.6.1.4.1.4458.1000.1.6.1.1.1.1 fro
 Information of unavailable seconds is sent to device application 
 
 """
-##############################################################
+# #############################################################
 # Function :  check_radwin_uas
 #  
 # Parameters : info(SNMP output of OID ) _no_params (Currently no params supported )
@@ -16,8 +16,21 @@ Information of unavailable seconds is sent to device application
 # Output  :  service state , Plugin output and performace data
 #############################################################
 
+import logging
+
+import os
+
+try:
+    log_file = "nocout/log_plugins.log"
+    with open(log_file, 'a+') as f:
+        pass
+    logging.basicConfig(filename=log_file, level=logging.CRITICAL)
+except:
+    pass
+
+
 def check_radwin_uas(item, _no_params, info):
-	"""
+    """
                 check_radwin_uas function calculates the unavaliable seconds
 
                 Args:
@@ -31,7 +44,7 @@ def check_radwin_uas(item, _no_params, info):
                                         0 : OK
                                         1 : Warning
                                         2: Critical
-					3: unknown
+                    3: unknown
                         infotext(string):
                                         plugin output
                                         Example : Device uas is 0
@@ -41,33 +54,33 @@ def check_radwin_uas(item, _no_params, info):
                                         Example: uas=0;;;;
                         Raises:
                                 ValueError ,Exception
-	"""
+    """
+    state = 3
+    uas = None
+    infotext = "unknown output"
+    try:
+        logging.debug("radwin_uas SNMP Output %s", info)
+        if info[0][0]:
+            uas = int(info[0][0])
+            state = 0
+            infotext = "Device uas is %d " % uas
+    except ValueError:
+        infotext = "type mismatch on value"
+        logging.critical("radwin_uas %s", infotext, exc_info=True)
+    except:
+        infotext = "unknown value"
+        logging.critical("radwin_uas %s", infotext, exc_info=True)
+    return (state, infotext, [("uas", uas)])
 
-        try:
-		if info[0][0]:
-			uas  = int(info[0][0])
-        		state = 0
-        		infotext = "Device uas is %d " % uas
-	except ValueError:
-		state = 0
-		infotext = " type mismatch on value"
-		uas = None
-		return (state,infotext,[("uas",uas)])
-	except:
-		state = 3
-		infotext = "unknown value"
-		uas = None
-		return (state,infotext,[("uas",uas)])
-        return (state,  infotext,[("Uas",uas)])
 
 check_info["radwin_uas"] = {
-	'check_function'        :  check_radwin_uas,
-	'service_description'   :  'radwin_unavilable_seconds',
-	'has_perfdata'		:	True,
+	'check_function': check_radwin_uas,
+	'service_description': 'radwin_uas',
+	'has_perfdata': True,
 }
 
 ##############################################################
 # SNMP OID
 #############################################################
-snmp_info["radwin_uas"] = ( ".1.3.6.1.4.1.4458.1000.1.6.1.1", [ "1.1" ] )
+snmp_info["radwin_uas"] = ( ".1.3.6.1.4.1.4458.1000.1.6.1.1", ["1.1"] )
 

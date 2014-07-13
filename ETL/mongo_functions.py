@@ -50,8 +50,8 @@ def mongo_db_insert(db,event_dict,flag):
 			db.service_perf.insert(event_dict)
 		elif flag == "network_perf_data":
 			db.network_perf.insert(event_dict)
-			print "Data inserted into Mongodb"
-			print datetime.now()
+		elif flag == "status_services":
+			db.status_perf.insert(event_dict)
                 return success
         else:
                 print "Mongo_db insertion failed"

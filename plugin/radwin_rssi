@@ -8,7 +8,7 @@ poller script takes the snmp value of OID .1.3.6.1.4.1.4458.1000.1.6.4.1.1.101 f
 RSSI information is sent to device application 
 
 """
-###################################################################
+# ##################################################################
 #  Function : check_radwin_rssi
 #
 #  Parameters: info(SNMP output) ,params(parameters to check the service state) 
@@ -17,72 +17,82 @@ RSSI information is sent to device application
 ##################################################################
 
 
-params = (-50,-80)
+
 import logging
-DEBUG = False
+
+import os
+
 try:
-    logging.basicConfig(filename="/omd/sites/master_UA/log_plugins.log", level=logging.DEBUG)
-    DEBUG = True
+    log_file = "nocout/log_plugins.log"
+    with open(log_file, 'a+') as f:
+        pass
+    logging.basicConfig(filename=log_file, level=logging.CRITICAL)
+    logger = logging.getLogger('plugins:')
 except:
     pass
 
-def check_radwin_rssi(item,params,info):
-	"""
-		Check_radwin_rssi function calcaulates the received signal strength indication
+params = (-50, -85)
 
-		Args:
-			item (str) Specific item on SNMP output on which we want to filter results
-		
-		Kwargs:
-			params (tuple) Check parameters for critical and warning state of service
 
-		Returns:
-			state (int) :
-					0: OK
-					1: Warning
-					2: Critical
-					3: unknown
-			infotext(string):
-					plugin output
-					Example : Device received signal strength indication is -76
+def check_radwin_rssi(item, params, info):
+    """
+        Check_radwin_rssi function calcaulates the received signal strength indication
 
-			performance_data  (list):
-					performance data
-					Example: radwin_rssi=-76;-50;-80;;;
-			Raises:
-				ValueError ,Exception
-	"""
-        warn, crit = params
-        state = 3
-        infotext = "unknown output"
-        rssi = None
+        Args:
+            item (str) Specific item on SNMP output on which we want to filter results
 
-	try:
-                if DEBUG:
-                    logging.debug(info)
-                if not len(info):
-                    raise ValueError
-        	rssi  = int(info[0][0])
-		if rssi < crit:
-			state = 2
-		elif rssi > crit and rssi < warn:
-			state = 1
-		else:
-			state =0
-		infotext = "Device received signal strength indication is %s " % rssi
-	except ValueError:
-		infotext = "type mismatch value"
-	except:
-		infotext = "unknown value"
-        return (state,  infotext, [("radwin_rssi",rssi,warn,crit)])
+        Kwargs:
+            params (tuple) Check parameters for critical and warning state of service
+
+        Returns:
+            state (int) :
+                    0: OK
+                    1: Warning
+                    2: Critical
+                    3: unknown
+            infotext(string):
+                    plugin output
+                    Example : Device received signal strength indication is -76
+
+            performance_data  (list):
+                    performance data
+                    Example: radwin_rssi=-76;-50;-80;;;
+            Raises:
+                ValueError ,Exception
+    """
+    warn, crit = params
+    state = 3
+    infotext = "unknown output"
+    rssi = None
+
+    try:
+        logging.debug("radwin_rssi SNMP Output %s", info)
+        if not len(info):
+            raise ValueError
+        rssi = int(info[0][0])
+        if rssi < crit:
+            state = 2
+        elif rssi > crit and rssi < warn:
+            state = 1
+        else:
+            state = 0
+        infotext = "Device received signal strength indication is %s " % rssi
+    except ValueError:
+        infotext = "type mismatch value"
+        logger.critical("radwin_rssi %s", infotext, exc_info=True)
+    except:
+        infotext = "unknown value"
+        logger.critical("radwin_rssi %s", infotext, exc_info=True)
+    return (state, infotext, [("rssi", rssi, warn, crit)])
+
 
 check_info["radwin_rssi"] = {
-	'check_function'        :  check_radwin_rssi,
-	'service_description'   :  'radwin_rssi',
-	'has_perfdata'          :  True,
+'check_function': check_radwin_rssi,
+'service_description': 'radwin_rssi',
+'has_perfdata': True,
 }
 
 #######################################################################
 #	SNMP OID
 #######################################################################
-snmp_info["radwin_rssi"] = ( ".1.3.6.1.4.1.4458.1000.1.6.4.1", [ "1.101" ] )
+snmp_info["radwin_rssi"] = ( ".1.3.6.1.4.1.4458.1000.1.6.4.1", ["1.101"] )
