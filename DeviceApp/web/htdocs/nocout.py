@@ -627,7 +627,6 @@ def nocout_create_sync_snapshot():
     global nocout_replication_paths
     #os.remove(sync_snapshot_file)
     tmp_path = "%s-%s" % (sync_snapshot_file, 'nocout')
-    html.write(pprint.pformat(tmp_path))
     multitar.create(tmp_path, nocout_replication_paths)
     os.rename(tmp_path, sync_snapshot_file)
 
