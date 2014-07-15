@@ -27,7 +27,6 @@ try:
     with open(log_file, 'a+') as f:
         pass
     logging.basicConfig(filename=log_file, level=logging.CRITICAL)
-    logger = logging.getLogger('plugins:')
 except:
     pass
 
@@ -79,10 +78,10 @@ def check_radwin_rssi(item, params, info):
         infotext = "Device received signal strength indication is %s " % rssi
     except ValueError:
         infotext = "type mismatch value"
-        logger.critical("radwin_rssi %s", infotext, exc_info=True)
+        logging.critical("radwin_rssi %s", infotext, exc_info=True)
     except:
         infotext = "unknown value"
-        logger.critical("radwin_rssi %s", infotext, exc_info=True)
+        logging.critical("radwin_rssi %s", infotext, exc_info=True)
     return (state, infotext, [("rssi", rssi, warn, crit)])
 
 
