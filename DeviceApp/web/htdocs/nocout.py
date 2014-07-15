@@ -194,8 +194,11 @@ def addservice():
                 cmd_params = ast.literal_eval(payload.get('cmd_params'))
                 for param, thresholds in cmd_params.items():
                     t = ()
-                    t += (int(thresholds.get('warning')),)
-                    t += (int(thresholds.get('critical')),)
+                    if thresholds.get('warning') and thresholds.get('critical'):
+                        t += (int(thresholds.get('warning')),)
+                        t += (int(thresholds.get('critical')),)
+                    else:
+                        t = None
                 check_tuple = ([payload.get('host')], payload.get('service'), None, t)
                 g_service_vars['checks'].append(check_tuple)
             except Exception, e:
@@ -230,9 +233,9 @@ def addservice():
         if payload.get('snmp_community'):
             snmp_community_list = ast.literal_eval(payload.get('snmp_community'))
             if snmp_community_list.get('version') == 'v1':
-                snmp_community = (snmp_community_list.get('read_community'), [payload.get('host')])
+                snmp_community = (snmp_community_list.get('read_community'), [], [payload.get('host')])
             elif snmp_community_list.get('version') == 'v2c':
-                snmp_community = (snmp_community_list.get('read_community'), [payload.get('host')])
+                snmp_community = (snmp_community_list.get('read_community'), [], [payload.get('host')])
             elif snmp_community_list.get('version') == 'v3':
                 snmp_community = ((snmp_community_list.get('security_level'),snmp_community_list.get('auth_protocol'),
                     snmp_community_list.get('security_name'),snmp_community_list.get('auth_password'),
@@ -371,9 +374,9 @@ def editservice():
         if payload.get('snmp_community'):
             snmp_community_list = ast.literal_eval(payload.get('snmp_community'))
             if snmp_community_list.get('version') == 'v1':
-                snmp_community = (snmp_community_list.get('read_community'), [payload.get('host')])
+                snmp_community = (snmp_community_list.get('read_community'), [], [payload.get('host')])
             elif snmp_community_list.get('version') == 'v2c':
-                snmp_community = (snmp_community_list.get('read_community'), [payload.get('host')])
+                snmp_community = (snmp_community_list.get('read_community'), [], [payload.get('host')])
             elif snmp_community_list.get('version') == 'v3':
                 snmp_community = ((snmp_community_list.get('security_level'),snmp_community_list.get('auth_protocol'),
                     snmp_community_list.get('security_name'),snmp_community_list.get('auth_password'),
